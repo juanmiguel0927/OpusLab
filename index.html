@@ -74,6 +74,14 @@
         .card { background: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; padding: 1rem; transition: background-color 0.3s, border-color 0.3s; }
         input, select { border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.5rem; outline: none; font-size: 16px; width: 100%; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         
+        /* Controles de Rango (Volumen) */
+        input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; padding: 0; border: none; outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #cbd5e1; border-radius: 2px; }
+        .dark input[type=range]::-webkit-slider-runnable-track { background: #475569; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #3b82f6; margin-top: -4px; transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .dark input[type=range]::-webkit-slider-thumb { background: #60a5fa; }
+
         th { @apply text-[10px] md:text-xs uppercase text-slate-500 font-bold tracking-wider p-2 md:p-3 border-b border-slate-100 bg-slate-50 transition-colors; }
         td { @apply p-2 md:p-3 border-b border-slate-50 text-[10px] md:text-sm transition-colors; }
 
@@ -179,7 +187,7 @@
         .dark .tabs-container { background: #020617; border-bottom-color: #1e293b; }
         .dark .nav-btn { color: #94a3b8; }
         .dark .card { background: #0f172a; border-color: #1e293b; }
-        .dark select, .dark input { background-color: #020617 !important; color: #ffffff !important; border-color: #334155 !important; }
+        .dark select, .dark input:not([type=range]) { background-color: #020617 !important; color: #ffffff !important; border-color: #334155 !important; }
         .dark option { background-color: #0f172a; color: #ffffff; }
         .dark th { background: #0f172a !important; border-color: #1e293b !important; color: #ffffff !important; }
         .dark td { border-color: #1e293b !important; color: #f1f5f9 !important; }
@@ -210,8 +218,15 @@
                 <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Por Juan Miguel Rios Redondo</span>
             </div>
             <div class="flex items-center gap-2 md:gap-3">
-                <div id="midi-status" class="text-[9px] font-bold px-2 py-1.5 rounded bg-slate-100 text-slate-400 uppercase tracking-widest">MIDI: Desconectado</div>
-                <button onclick="toggleTheme()" class="p-1.5 bg-slate-100 rounded text-slate-500 hover:bg-slate-200 transition-colors shadow-sm" title="Alternar Modo Claro/Oscuro">
+                <!-- Control de Volumen Global -->
+                <div class="hidden sm:flex items-center gap-2 px-2 py-1.5 bg-slate-100 dark:bg-slate-800 rounded shadow-inner" title="Volumen Maestro">
+                    <i data-lucide="volume-2" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400"></i>
+                    <input type="range" min="0" max="1" step="0.05" value="0.5" oninput="setVolume(this.value)">
+                </div>
+                
+                <div id="midi-status" class="text-[9px] font-bold px-2 py-1.5 rounded bg-slate-100 text-slate-400 uppercase tracking-widest dark:bg-slate-800 dark:text-slate-400">MIDI: Desconectado</div>
+                
+                <button onclick="toggleTheme()" class="p-1.5 bg-slate-100 rounded text-slate-500 hover:bg-slate-200 transition-colors shadow-sm dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300" title="Alternar Modo Claro/Oscuro">
                     <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -253,7 +268,10 @@
                 <div class="piano-outer">
                     <div class="piano-keyboard" id="piano"></div>
                 </div>
-                <p class="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest">Rango completo: A0 a C8 (88 Teclas)</p>
+                <p class="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest mt-2">
+                    Rango completo: A0 a C8 (88 Teclas) <br class="md:hidden"> <span class="hidden md:inline">•</span> 
+                    Teclado PC (C4-C5): A..K / Negras: W,E,T,Y,U
+                </p>
             </div>
         </div>
 
@@ -551,7 +569,7 @@
                                 <h5 class="text-sm font-black uppercase tracking-widest text-emerald-800 mb-2">Dominantes Alterados (Estables)</h5>
                                 <p class="text-xs md:text-sm font-bold text-emerald-700 mb-2">Son aquellos en los que todas las extensiones posibles están alteradas (b9, #9, b5/#11, #5/b13).</p>
                                 <ul class="text-xs md:text-sm text-emerald-900 space-y-2 font-medium">
-                                    <li><strong>El Fenómeno Acústico:</strong> Aunque melódicamente suenan muy tensos, al alterar de forma simétrica o total el bloque superior, el acorde creando una nueva estructura coherente y un nuevo centro de gravedad (apoyado en la simetría de la escala alterada).</li>
+                                    <li><strong>El Fenómeno Acústico:</strong> Aunque melódicamente suenan muy tensos, al alterar de forma simétrica o total el bloque superior, el acorde crea una nueva estructura coherente y un nuevo centro de gravedad (apoyado en la simetría de la escala alterada).</li>
                                     <li><strong>Resultado:</strong> Paradójicamente, son estables. Al igual que los sin alterar, forman un bloque sonoro sólido que puede sostenerse por sí mismo sin desmoronarse.</li>
                                 </ul>
                             </div>
@@ -839,7 +857,7 @@
                     Para encontrar las notas a evitar se han establecido dos reglas básicas:
                 </p>
                 <ul class="text-sm md:text-base text-slate-700 space-y-2 font-medium list-decimal pl-5 mb-4">
-                    <li><strong>Semitono Ascendente:</strong> Que no se forme semitono ascendente entre cualquier nota del acorde y la nota del modo que le corresponde inmediatamente superior.</li>
+                    <li><strong>Semitono Ascendente:</strong> Que no se forme semitono ascendente entre cualquier nota del acorde y la nota del modo que le corresponde জানালা superior.</li>
                     <li><strong>Tritono con Tonos Guía:</strong> Que no se forme tritono entre los tonos guía del acorde (3ra o 7ma) y cualquier nota del modo que no pertenezca al acorde.</li>
                 </ul>
 
@@ -1002,6 +1020,11 @@
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let nextTickTime = 0, timerID = null;
+        let masterVolume = 0.5;
+
+        function setVolume(val) {
+            masterVolume = parseFloat(val);
+        }
 
         function toggleTheme() {
             const html = document.documentElement;
@@ -1023,7 +1046,7 @@
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const o = audioCtx.createOscillator(), g = audioCtx.createGain();
             o.type = 'triangle'; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            g.gain.setValueAtTime(vol, audioCtx.currentTime);
+            g.gain.setValueAtTime(vol * masterVolume, audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
             o.connect(g); g.connect(audioCtx.destination);
             o.start(); o.stop(audioCtx.currentTime + dur);
@@ -1038,7 +1061,7 @@
                 const g = audioCtx.createGain();
                 o.type = 'triangle';
                 o.frequency.setValueAtTime(freq, time);
-                g.gain.setValueAtTime(0.08, time); 
+                g.gain.setValueAtTime(0.08 * masterVolume, time); 
                 g.gain.exponentialRampToValueAtTime(0.001, time + dur);
                 o.connect(g);
                 g.connect(audioCtx.destination);
@@ -1050,10 +1073,31 @@
         function playTick(time, type='normal') {
             const o = audioCtx.createOscillator(), g = audioCtx.createGain();
             o.frequency.setValueAtTime(type === 'accent' ? 1200 : 800, time);
-            g.gain.setValueAtTime(0.1, time);
+            g.gain.setValueAtTime(0.1 * masterVolume, time);
             g.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
             o.connect(g); g.connect(audioCtx.destination);
             o.start(time); o.stop(time + 0.05);
+        }
+
+        function playAnalyzerChord(bassChroma, upperChromas) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            let bassMidi = 36 + bassChroma; 
+            let voices = [bassMidi];
+            
+            if (upperChromas && upperChromas.length > 0) {
+                let rootMidi = 60 + upperChromas[0]; 
+                voices.push(rootMidi);
+                
+                let prevMidi = rootMidi;
+                for(let i = 1; i < upperChromas.length; i++) {
+                    let c = upperChromas[i];
+                    let m = 60 + c;
+                    while(m <= prevMidi) m += 12; 
+                    voices.push(m);
+                    prevMidi = m;
+                }
+            }
+            playVoices(voices, 1.5);
         }
 
         async function initMIDI() {
@@ -1086,6 +1130,24 @@
                 p.appendChild(k);
             }
             setTimeout(() => { document.querySelector('.piano-outer').scrollLeft = 520; }, 200);
+
+            // Mapeo del teclado del PC (C4 - C5)
+            const PC_KEY_TO_MIDI = { 'a':60, 'w':61, 's':62, 'e':63, 'd':64, 'f':65, 't':66, 'g':67, 'y':68, 'h':69, 'u':70, 'j':71, 'k':72 };
+            const pressedKeys = new Set();
+            
+            window.addEventListener('keydown', e => {
+                if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+                const key = e.key.toLowerCase();
+                if(PC_KEY_TO_MIDI[key] && !pressedKeys.has(key)) {
+                    pressedKeys.add(key);
+                    const keyEl = document.querySelector(`.key[data-midi="${PC_KEY_TO_MIDI[key]}"]`);
+                    if(keyEl) pressKey(keyEl, true);
+                }
+            });
+            window.addEventListener('keyup', e => {
+                const key = e.key.toLowerCase();
+                pressedKeys.delete(key);
+            });
         }
 
         function pressKey(k, play=true) {
@@ -1415,7 +1477,7 @@
                     const freq = 440 * Math.pow(2, (midi - 69) / 12);
                     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
                     o.type = 'triangle'; o.frequency.setValueAtTime(freq, time);
-                    g.gain.setValueAtTime(0.08, time); g.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
+                    g.gain.setValueAtTime(0.08 * masterVolume, time); g.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
                     o.connect(g); g.connect(audioCtx.destination);
                     o.start(time); o.stop(time + 1.2);
                 });
@@ -2421,6 +2483,7 @@
             const container = document.getElementById('results-grid');
             const rootObj = ALL_NOTE_NAMES.find(n => n.name === analyzerState.rootName);
             const isQuartal = ['qA', 'qB', 'qC'].includes(analyzerState.type);
+            const struct = getStructureNotes(rootObj, analyzerState.type);
 
             container.innerHTML = data.map((d, idx) => {
                 const isHome = d.bass.chroma === rootObj.chroma;
@@ -2446,8 +2509,14 @@
                                     ? `<div class="bg-red-500 text-white p-2.5 rounded-2xl shadow-lg animate-pulse"><i data-lucide="alert-circle" class="w-5 h-5"></i></div>` 
                                     : isHome ? `<div class="bg-blue-600 text-white p-2.5 rounded-2xl shadow-lg"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>` : ''}
                                 
+                                ${d.isCompatible ? `
+                                <button onclick="playAnalyzerChord(${d.bass.chroma}, [${struct.map(n=>n.chroma).join(',')}])" class="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-md active:scale-90 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border dark:border-indigo-800 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-transparent" title="Escuchar Acorde">
+                                    <i data-lucide="play" class="w-4 h-4 md:w-5 md:h-5"></i>
+                                </button>
+                                ` : ''}
+
                                 ${d.hasEnharmonic ? `
-                                <button onclick="toggleBassEnharmonic(${d.chroma})" class="p-2.5 rounded-2xl bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-md active:scale-90">
+                                <button onclick="toggleBassEnharmonic(${d.chroma})" class="p-2.5 rounded-2xl bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-md active:scale-90 dark:bg-slate-800 dark:hover:bg-blue-600 dark:border dark:border-slate-700">
                                     <i data-lucide="rotate-cw" class="w-4 h-4 md:w-5 md:h-5"></i>
                                 </button>
                                 ` : ''}
