@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OpusLab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; overflow-x: hidden; touch-action: manipulation; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .tabs-container { position: sticky; top: 0; z-index: 50; background: white; border-bottom: 1px solid #e2e8f0; }
+        .tabs-wrapper { display: flex; overflow-x: auto; white-space: nowrap; scrollbar-width: none; padding: 0 0.5rem; }
+        .tabs-wrapper::-webkit-scrollbar { display: none; }
+
+        .nav-btn {
+            padding: 0.8rem 1rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            min-width: 85px;
+            text-transform: uppercase;
+        }
+        @media (min-width: 768px) { .nav-btn { font-size: 0.8rem; flex-direction: row; gap: 0.5rem; min-width: auto; padding: 1rem 1.2rem; } }
+        .nav-btn.active-tab { color: #2563eb; border-bottom-color: #2563eb; background: #f0f7ff; }
+
+        .card { background: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; padding: 1rem; }
+        input, select { border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.5rem; outline: none; font-size: 16px; width: 100%; }
+        
+        th { @apply text-[10px] md:text-xs uppercase text-slate-500 font-bold tracking-wider p-2 md:p-3 border-b border-slate-100 bg-slate-50; }
+        td { @apply p-2 md:p-3 border-b border-slate-50 text-[10px] md:text-sm; }
+
+        /* Piano UI - 88 Keys Support */
+        .piano-outer { overflow-x: auto; padding: 15px 0; background: #0f172a; border-radius: 0.75rem; scroll-behavior: smooth; }
+        .piano-keyboard { display: flex; width: fit-content; padding: 10px; margin: 0 auto; }
+        .key { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 6px; font-size: 0.55rem; font-weight: bold; cursor: pointer; transition: background 0.1s, transform 0.05s; flex-shrink: 0; }
+        .white-key { width: 24px; height: 110px; background: #fff; border: 1px solid #bbb; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; z-index: 1; color: #94a3b8; }
+        .black-key { width: 16px; height: 65px; background: #000; margin-left: -8px; margin-right: -8px; z-index: 2; color: #cbd5e1; border-bottom-left-radius: 3px; border-bottom-right-radius: 3px; border: 1px solid #334155; }
+        .key.active { background: #3b82f6 !important; color: white !important; transform: translateY(2px); }
+
+        /* Randomizer */
+        .note-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+        .note-box {
+            background: white; border: 2px solid #e2e8f0; border-radius: 0.75rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 900; aspect-ratio: 1; transition: all 0.2s; color: #1e293b;
+        }
+        .note-box.active-note { border-color: #2563eb; color: #2563eb; background-color: #f0f7ff; transform: scale(1.05); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+        
+        .metro-dot { width: 12px; height: 12px; border-radius: 50%; background-color: #e2e8f0; transition: all 0.1s; }
+        .metro-dot.tick { background-color: #ef4444; transform: scale(1.3); }
+        .metro-dot.accent { background-color: #2563eb; transform: scale(1.5); }
+
+        /* Bartok Axis */
+        .axis-label { font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 4px; color: white; text-transform: uppercase; }
+        .bg-tonica { background-color: #10b981; }
+        .bg-dominante { background-color: #ef4444; }
+        .bg-subdominante { background-color: #3b82f6; }
+        
+        /* Interactive Route Scrollbar */
+        .route-scroll::-webkit-scrollbar { height: 6px; }
+        .route-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* Animaciones para Modales Analizador */
+        .modal-enter { animation: fadeInModal 0.2s ease-out forwards; }
+        .modal-content-enter { animation: zoomInModal 0.2s ease-out forwards; }
+        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomInModal { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        select { appearance: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-16">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-600 p-1.5 rounded-lg text-white"><i data-lucide="music-4" class="w-5 h-5"></i></div>
+                <h1 class="text-lg font-bold tracking-tight">OpusLab <span class="text-blue-600"></span></h1>
+            </div>
+            <div id="midi-status" class="text-[9px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-400 uppercase tracking-widest">MIDI: Desconectado</div>
+        </div>
+
+        <div class="tabs-container">
+            <div class="tabs-wrapper" id="main-tabs">
+                <button onclick="showTab('midi')" class="nav-btn active-tab" data-tab="midi"><i data-lucide="piano" class="w-4 h-4"></i><span>MIDI 88</span></button>
+                <button onclick="showTab('finale')" class="nav-btn" data-tab="finale"><i data-lucide="ruler" class="w-4 h-4"></i><span>Maquetación</span></button>
+                <button onclick="showTab('colors')" class="nav-btn" data-tab="colors"><i data-lucide="palette" class="w-4 h-4"></i><span>Colores</span></button>
+                <button onclick="showTab('bartok')" class="nav-btn" data-tab="bartok"><i data-lucide="axis" class="w-4 h-4"></i><span>Bartók</span></button>
+                <button onclick="showTab('structs')" class="nav-btn" data-tab="structs"><i data-lucide="layers" class="w-4 h-4"></i><span>E. Superior</span></button>
+                <button onclick="showTab('trocado')" class="nav-btn" data-tab="trocado"><i data-lucide="arrow-up-down" class="w-4 h-4"></i><span>Intervalo/Trocado</span></button>
+                <button onclick="showTab('desarrollo')" class="nav-btn" data-tab="desarrollo"><i data-lucide="repeat" class="w-4 h-4"></i><span>D. Acordes</span></button>
+                <button onclick="showTab('random')" class="nav-btn text-orange-600 font-black" data-tab="random"><i data-lucide="dices" class="w-4 h-4"></i><span>Random</span></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+        
+        <!-- 1. MIDI & PIANO (88 Teclas) -->
+        <div id="midi" class="tab-content active space-y-4">
+            <div class="card space-y-4">
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="p-3 bg-blue-600 text-white rounded-xl text-center shadow-md">
+                        <p class="text-[8px] uppercase font-black tracking-widest opacity-80 mb-1">Nota MIDI</p>
+                        <div id="midi-res" class="text-2xl font-black">-</div>
+                    </div>
+                    <div class="p-3 bg-slate-800 text-white rounded-xl text-center shadow-md">
+                        <p class="text-[8px] uppercase font-black tracking-widest opacity-80 mb-1">Academia</p>
+                        <div id="midi-aca-res" class="text-2xl font-black">-</div>
+                    </div>
+                    <div class="p-3 bg-slate-900 text-white rounded-xl text-center shadow-md">
+                        <p class="text-[8px] uppercase font-black tracking-widest opacity-80 mb-1">Frecuencia Hz</p>
+                        <div id="freq-res" class="text-sm md:text-lg mono font-bold">-</div>
+                    </div>
+                </div>
+                <div class="piano-outer">
+                    <div class="piano-keyboard" id="piano"></div>
+                </div>
+                <p class="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest">Rango completo: A0 a C8 (88 Teclas)</p>
+            </div>
+        </div>
+
+        <!-- 2. MAQUETACIÓN MUSICAL -->
+        <div id="finale" class="tab-content space-y-4">
+            <div class="card space-y-4">
+                <h3 class="text-sm font-black uppercase text-slate-800 border-b pb-2">Maquetación Musical</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">Tamaño Predeterminado (Staff Height)</label>
+                        <select id="stave-select" onchange="updateStaveInfo()" class="border-slate-300 font-bold text-slate-700">
+                            <option value="0">Educación (104 EVPUs)</option>
+                            <option value="1">Educación (90 EVPUs)</option>
+                            <option value="2">Piano / Lead (84 EVPUs)</option>
+                            <option value="3" selected>Partes / Piano / Lead (79 EVPUs)</option>
+                            <option value="4">Instrumental (74 EVPUs)</option>
+                            <option value="5">Pocket Score (70 EVPUs)</option>
+                            <option value="6">Full Score (65 EVPUs)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">EVPUs Manuales</label>
+                        <input type="number" id="custom-evpu" placeholder="Ej: 100" oninput="updateCustomStave()" class="border-slate-300 font-bold text-slate-700">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6" id="stave-results"></div>
+                
+                <div id="stave-app" class="mt-4 p-4 bg-blue-50 text-blue-800 text-sm font-black rounded-lg text-center border-2 border-blue-200 shadow-sm uppercase tracking-wider">
+                    Selecciona una talla para ver aplicaciones
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. JERARQUÍA DE COLORES -->
+        <div id="colors" class="tab-content space-y-4">
+            <div class="card space-y-4">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between border-b pb-4">
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tighter">JERARQUÍA DE COLORES</h3>
+                        <p class="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-1">Juan Miguel Rios Redondo</p>
+                        <p class="text-[9px] text-slate-400 font-medium uppercase tracking-wider mt-1">Agrupados por Familias (Brillante a Oscuro)</p>
+                    </div>
+                    <select id="parent-scale-select" class="md:w-72 border-slate-300 font-bold" onchange="renderColors()">
+                        <option value="jonico">ESCALA MAYOR</option>
+                        <option value="menorArm">MENOR ARMÓNICA</option>
+                        <option value="menorMel">MENOR MELÓDICA</option>
+                        <option value="mayorArm">MAYOR ARMÓNICA</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr>
+                                <th class="w-48">Modo / Grado</th>
+                                <th class="text-center bg-blue-100 text-blue-800 border-b-2 border-blue-200">1º (Prin)</th>
+                                <th class="text-center bg-indigo-50 text-indigo-800 border-b-2 border-indigo-200">2º (Sec)</th>
+                                <th class="text-center">3º</th>
+                                <th class="text-center">4º</th>
+                                <th class="text-center">5º</th>
+                                <th class="text-center">6º</th>
+                            </tr>
+                        </thead>
+                        <tbody id="colors-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. BARTOK (Ejes y Puntos Cardinales) -->
+        <div id="bartok" class="tab-content space-y-4">
+            <div class="card space-y-4">
+                
+                <!-- Pestañas internas de Bartók -->
+                <div class="flex flex-col sm:flex-row gap-2 border-b border-slate-200 pb-3">
+                    <button onclick="showBartokSubTab('func')" id="btab-func" class="px-3 py-2 text-[10px] md:text-xs font-black uppercase rounded-lg bg-blue-600 text-white transition-colors shadow-sm">Funcionalidad Tonal B.Bartok por especie de acordes</button>
+                    <button onclick="showBartokSubTab('puntos')" id="btab-puntos" class="px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">Puntos Cardinales (films score) B. Bartok</button>
+                </div>
+
+                <!-- Sub-pestaña 1: Funcionalidad Tonal -->
+                <div id="bcontent-func" class="block animate-[fadeIn_0.3s_ease-in-out]">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <label class="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Centro Tonal (Tónica):</label>
+                        <select id="bartok-root-select" onchange="renderBartokGrid()" class="border-slate-300 font-black text-slate-800 rounded-md p-1 min-w-[80px]">
+                            <!-- Generado por JS -->
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4" id="bartok-grid"></div>
+                </div>
+
+                <!-- Sub-pestaña 2: Puntos Cardinales -->
+                <div id="bcontent-puntos" class="hidden animate-[fadeIn_0.3s_ease-in-out]">
+                    
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5 mb-6 shadow-sm">
+                        <h4 class="text-sm font-black uppercase tracking-widest text-indigo-800 mb-3">Reglas del Esquema Completo</h4>
+                        <ul class="text-xs text-indigo-700 space-y-2 font-medium list-disc pl-5">
+                            <li>Cada Grupo funciona como una tonalidad.</li>
+                            <li>Los grupos son atonales, ninguno es I o todos son I, no hay tónica o todos son tónica.</li>
+                            <li>Vale moverse libre de cualquier acorde a cualquier acorde dentro de un mismo grupo.</li>
+                            <li>Vale usar los acordes <strong>Mayores</strong> y/o <strong>menores</strong>.</li>
+                            <li>Vale moverse del mismo polo al mismo polo (ej: E-E o S-S).</li>
+                            <li><strong>Mismo acorde = PORTAL</strong> (Se usa como puente para modular o cambiar de grupo).</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="puntos-grid"></div>
+
+                    <!-- Simetría de 3ras Mayores -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-6 shadow-sm">
+                        <h4 class="text-sm font-black uppercase tracking-widest text-amber-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i> Simetría de 3ras Mayores (Film Score)
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-3">
+                                <h5 class="text-xs font-black text-amber-700 uppercase border-b border-amber-200 pb-1">Uso y Enlaces</h5>
+                                <ul class="text-xs text-amber-900 space-y-2 font-medium list-disc pl-5">
+                                    <li><strong>División de la Octava:</strong> Divide la octava en 3 partes iguales (Triángulo).</li>
+                                    <li><strong>Enlaces:</strong> Enlaza acordes a distancia de 3ra Mayor (ej. Cmaj7 a Emaj7).</li>
+                                    <li><strong>Pivote:</strong> Al menos una nota se mantiene común entre los acordes.</li>
+                                </ul>
+                            </div>
+                            <div class="space-y-3">
+                                <h5 class="text-xs font-black text-amber-700 uppercase border-b border-amber-200 pb-1">Escalas Recomendadas</h5>
+                                <ul class="text-xs text-amber-900 space-y-2 font-medium list-disc pl-5">
+                                    <li><strong>Lidia:</strong> Para acordes Mayores.</li>
+                                    <li><strong>Aumentada:</strong> Para enlazar los 3 polos simétricos.</li>
+                                    <li><strong>Hexátona:</strong> Para suspender la tonalidad.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div id="triangles-container" class="contents"></div>
+                        </div>
+                    </div>
+
+                    <!-- Ruta Interactiva de Armonía -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 mt-6 shadow-sm">
+                        <div class="flex flex-col md:flex-row items-center justify-between mb-4 border-b border-slate-100 pb-3 gap-4">
+                            <h4 class="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                                <i data-lucide="route" class="w-5 h-5 text-blue-500"></i> Ruta Interactiva (Conducción Parsimoniosa)
+                            </h4>
+                            <div class="flex gap-3">
+                                <button onclick="playRouteSequence()" class="text-[10px] uppercase font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors">
+                                    <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Reproducir Secuencia
+                                </button>
+                                <button onclick="clearRoute()" class="text-[10px] uppercase font-bold text-red-500 hover:text-red-700 flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Limpiar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap items-end gap-3 mb-6 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <div>
+                                <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 block">Grupo de Partida</label>
+                                <select id="route-group" onchange="updateRouteOptions()" class="border-slate-300 font-bold text-slate-700 rounded p-2 text-sm">
+                                    <option value="any">Cualquier Grupo</option>
+                                    <option value="1">Grupo 1 (C, F#, Eb, A)</option>
+                                    <option value="2">Grupo 2 (Db, G, E, Bb)</option>
+                                    <option value="3">Grupo 3 (D, Ab, F, B)</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 min-w-[300px]">
+                                <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 block">Siguiente Acorde (Enlaces Permitidos)</label>
+                                <select id="route-point" class="border-slate-300 font-black text-slate-800 rounded p-2 text-sm w-full">
+                                    <!-- Llenado dinámicamente -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold uppercase text-slate-500 mb-1 block">Calidad</label>
+                                <select id="route-quality" class="border-slate-300 font-black text-slate-700 rounded p-2 text-sm">
+                                    <option value="Mayor">Mayor</option>
+                                    <option value="Menor">Menor</option>
+                                </select>
+                            </div>
+                            <button onclick="addRouteChord()" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-sm px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Añadir
+                            </button>
+                        </div>
+
+                        <!-- Visor de la progresión -->
+                        <div class="overflow-x-auto pb-4 route-scroll">
+                            <div id="route-progression" class="flex items-center gap-4 min-h-[140px] p-2">
+                                <div class="text-xs text-slate-400 font-medium italic">Selecciona el primer acorde para comenzar...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 5. STRUcripts -->
+        <div id="structs" class="tab-content space-y-4">
+            <div class="card space-y-4">
+                
+                <!-- Pestañas internas de Estructuras Superiores -->
+                <div class="flex flex-col sm:flex-row gap-2 border-b border-slate-200 pb-3 flex-wrap">
+                    <h3 class="text-sm font-black uppercase text-slate-800 flex items-center gap-2 mr-4">
+                        <i data-lucide="layers" class="w-5 h-5 text-blue-600"></i> E. Superior
+                    </h3>
+                    <button onclick="showStructsSubTab('diatonic')" id="stab-diatonic" class="px-3 py-2 text-[10px] md:text-xs font-black uppercase rounded-lg bg-blue-600 text-white transition-colors shadow-sm">E. Superior diatónicas</button>
+                    <button onclick="showStructsSubTab('dom')" id="stab-dom" class="px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">Dominantes, Frigios y Sus</button>
+                    <button onclick="showStructsSubTab('fisica')" id="stab-fisica" class="px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">Física de Dominantes</button>
+                    <button onclick="showStructsSubTab('analyzer')" id="stab-analyzer" class="px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">Analizador</button>
+                </div>
+
+                <!-- Sub-pestaña 1: E. Superior diatónicas -->
+                <div id="scontent-diatonic" class="block animate-[fadeIn_0.3s_ease-in-out]">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-widest">Tonalidad Base (Bajos):</label>
+                        <select id="structs-root" onchange="renderStructs()" class="border-slate-300 font-black text-slate-800 rounded-md p-2 min-w-[100px] outline-none text-sm">
+                            <!-- Opciones generadas por JS -->
+                        </select>
+                    </div>
+                    
+                    <!-- Explicación de E. Superior.pdf -->
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5 shadow-sm mb-6">
+                        <h4 class="text-base font-black uppercase tracking-widest text-indigo-800 mb-3"><i data-lucide="info" class="w-5 h-5 inline-block -mt-1 mr-1"></i> Sustitución Diatónica</h4>
+                        <p class="text-sm md:text-base font-medium text-indigo-900 leading-relaxed mb-3">
+                            Una <strong>estructura superior</strong> es un grupo de notas —tríada o cuatríada— que se superpone a un bajo, el cual se toma como fundamental del acorde. El grupo de notas junto con el bajo genera una sonoridad determinada. Este método nos otorga la posibilidad de sustituir de forma cualitativa los acordes de la tonalidad.
+                        </p>
+                        <p class="text-sm md:text-base font-medium text-indigo-900 leading-relaxed mb-3">
+                            El procedimiento se llama <em>sustitución diatónica con intervalos diatónicos</em> y consiste en superponer todas las tríadas de un centro tonal, sobre todos los grados de la tonalidad, los cuales se toman como fundamental. Así, el habitual acorde cuatríada queda sustituido por uno que está sobre el mismo grado y cumple la misma función, pero tiene un color diferente.
+                        </p>
+                        <p class="text-sm md:text-base font-medium text-indigo-900 leading-relaxed">
+                            Por último cabe anotar que la sustitución no es posible cuando dentro de la estructura del nuevo acorde aparecen <strong class="cursor-pointer text-blue-600 underline hover:text-blue-800 transition-colors" onclick="openModal()">notas a evitar</strong>, ya que el acorde no podría cumplir la función diatónica del acorde original. (Las casillas vacías representan sustituciones no viables).
+                        </p>
+                    </div>
+
+                    <div id="structs-grid"></div>
+                </div>
+
+                <!-- Sub-pestaña 2: Dominantes, Frigios y Sus -->
+                <div id="scontent-dom" class="hidden animate-[fadeIn_0.3s_ease-in-out] space-y-6">
+                    
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div class="flex flex-col gap-1 w-full sm:w-auto">
+                            <label class="text-xs font-bold uppercase text-slate-500 tracking-widest">Fundamental (Dominante):</label>
+                            <select id="dom-root" onchange="renderDomStructs()" class="border-slate-300 font-black text-slate-800 rounded-md p-2 w-full sm:min-w-[100px] outline-none text-sm">
+                                <!-- Opciones generadas por JS -->
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-1 w-full sm:w-auto">
+                            <label class="text-xs font-bold uppercase text-slate-500 tracking-widest">Estructura / Tipo:</label>
+                            <select id="dom-table-select" onchange="renderDomStructs()" class="border-slate-300 font-black text-slate-800 rounded-md p-2 w-full sm:min-w-[250px] outline-none text-sm">
+                                <option value="mixo_tri">1. Acordes Mixolidios (Tríadas)</option>
+                                <option value="frigio_tri">2. Acordes Frigios Sus. (Tríadas)</option>
+                                <option value="sus_tri">3. Acordes Sus (Tríadas)</option>
+                                <option value="mixo_tet">4. Acordes Mixolidios (Tétradas)</option>
+                                <option value="frigio_tet">5. Acordes Frigios Sus. (Tétradas)</option>
+                                <option value="sus_tet">6. Acordes Sus (Tétradas)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5 shadow-sm">
+                        <p class="text-sm md:text-base font-medium text-indigo-900 leading-relaxed mb-4">
+                            Todos los acordes a continuación, están sobre el <strong>Shell Voicing dominante</strong> (Fundamental, tercera mayor, séptima menor; 1, 3, b7). Solo esta descrito la(s) tensión(es) que proporciona la triada o tétrada; el resto de las notas pertenece a alguna nota del acorde (1, 3, 5, b7).
+                        </p>
+                        <p class="text-sm md:text-base font-medium text-indigo-900 leading-relaxed mb-4">
+                            Las escalas se formarán desde la fundamental del Shell Voicing. Ej. <em>Dbm sobre el Shell Voicing de C7 (1, 3, b7) usar la escala de: C Mixolidio b9, b13<sup class="text-xs">1</sup>.</em>
+                        </p>
+                        <div class="text-xs text-indigo-700 font-medium border-t border-indigo-200 pt-3 mt-4 space-y-1">
+                            <p>¹ Todas las escalas deben estar formadas desde la fundamental del Shell Voicing, sin embargo, no es necesario comenzar a tocar, componer o improvisar desde dicha fundamental; solo se hace para obtener las notas correctas de la escala.</p>
+                            <p>² Para lograr una sonoridad mucho "más" frigia, permutar el b13 o 13 por la 5.</p>
+                        </div>
+                    </div>
+
+                    <div id="dom-tables-container" class="block w-full">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Sub-pestaña 3: Física de Dominantes -->
+                <div id="scontent-fisica" class="hidden animate-[fadeIn_0.3s_ease-in-out] space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-lg md:text-xl font-black uppercase tracking-widest text-slate-800 mb-4 border-b border-slate-100 pb-3">La Física de los Dominantes: Estabilidad vs. Inestabilidad</h4>
+                        <p class="text-sm md:text-base font-medium text-slate-700 leading-relaxed mb-6">
+                            En la armonía contemporánea, la necesidad de que un acorde dominante (V7) resuelva no depende exclusivamente de la teoría escrita, sino de la acústica y el comportamiento de los parciales armónicos.<br><br>
+                            Si analizamos el sonido desde la física, los dominantes se dividen en tres categorías acústicas que cambian por completo nuestra forma de rearmonizar e improvisar:
+                        </p>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
+                                <h5 class="text-sm font-black uppercase tracking-widest text-blue-800 mb-2">Dominantes Sin Alterar (Estables)</h5>
+                                <p class="text-xs md:text-sm font-bold text-blue-700 mb-2">Son aquellos que utilizan únicamente las extensiones naturales (9, 11, 13).</p>
+                                <ul class="text-xs md:text-sm text-blue-900 space-y-2 font-medium">
+                                    <li><strong>El Fenómeno Acústico:</strong> Estas notas aparecen de forma natural en los primeros armónicos superiores de la fundamental. Al coincidir con la física del sonido, el acorde se refuerza a sí mismo sin fricciones.</li>
+                                    <li><strong>Resultado:</strong> Son acústicamente estables. No tienen una urgencia imperiosa de resolver. Por eso podemos quedarnos tocando un G7(13) durante minutos en un vamp de Funk o en un Blues sin sentir que la progresión colapsa.</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-5 shadow-sm">
+                                <h5 class="text-sm font-black uppercase tracking-widest text-emerald-800 mb-2">Dominantes Alterados (Estables)</h5>
+                                <p class="text-xs md:text-sm font-bold text-emerald-700 mb-2">Son aquellos en los que todas las extensiones posibles están alteradas (b9, #9, b5/#11, #5/b13).</p>
+                                <ul class="text-xs md:text-sm text-emerald-900 space-y-2 font-medium">
+                                    <li><strong>El Fenómeno Acústico:</strong> Aunque melódicamente suenan muy tensos, al alterar de forma simétrica o total el bloque superior, el acorde crea una nueva estructura coherente y un nuevo centro de gravedad (apoyado en la simetría de la escala alterada).</li>
+                                    <li><strong>Resultado:</strong> Paradójicamente, son estables. Al igual que los sin alterar, forman un bloque sonoro sólido que puede sostenerse por sí mismo sin desmoronarse.</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-red-50 border border-red-200 rounded-xl p-5 shadow-sm">
+                                <h5 class="text-sm font-black uppercase tracking-widest text-red-800 mb-2">Dominantes Semi-Alterados (Inestables)</h5>
+                                <p class="text-xs md:text-sm font-bold text-red-700 mb-2">Son aquellos que mezclan extensiones naturales con alteradas (Ej: b9 con 13 natural).</p>
+                                <ul class="text-xs md:text-sm text-red-900 space-y-2 font-medium">
+                                    <li><strong>El Fenómeno Acústico:</strong> Aquí ocurre el verdadero choque. Al mezclar parciales armónicos naturales (que resuenan en consonancia con la fundamental) con alteraciones puras, se genera una fricción acústica interna insostenible. El acorde "pelea" contra su propia serie armónica.</li>
+                                    <li><strong>Resultado:</strong> Son altamente inestables. Esta contradicción interna genera la verdadera "gravedad" armónica, creando una necesidad obligatoria e inminente de resolver hacia un acorde de destino.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-100 border border-slate-300 rounded-xl p-5">
+                            <h5 class="text-sm font-black uppercase tracking-widest text-slate-800 mb-2">Conclusión Práctica</h5>
+                            <p class="text-sm md:text-base font-medium text-slate-700 leading-relaxed">
+                                Si buscas que un acorde dominante funcione como un "color" sobre el cual reposar o improvisar largamente, utiliza dominantes <strong>Sin Alterar</strong> o totalmente <strong>Alterados</strong>.<br><br>
+                                Pero si tu objetivo es generar movimiento, empuje y obligar al oído del espectador a pedir una resolución inmediata, utiliza un dominante <strong>Semi-alterado</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-pestaña 4: Analizador Superestructural -->
+                <div id="scontent-analyzer" class="hidden animate-[fadeIn_0.3s_ease-in-out]">
+                    <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 relative overflow-hidden">
+                        
+                        <div class="absolute -top-20 -right-20 p-40 opacity-[0.03] pointer-events-none">
+                            <i data-lucide="sparkles" class="w-full h-full text-blue-600 rotate-12" style="width: 400px; height: 400px;"></i>
+                        </div>
+                        
+                        <div class="relative z-10 flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-8">
+                            <div class="flex items-center gap-5">
+                                <div class="bg-blue-600 p-4 rounded-[1.5rem] text-white shadow-blue-200 shadow-xl flex items-center justify-center">
+                                    <i data-lucide="microscope" class="w-8 h-8"></i>
+                                </div>
+                                <div>
+                                    <h1 class="text-2xl md:text-3xl font-black tracking-tighter uppercase leading-none text-slate-900">
+                                        Analizador <span class="text-blue-600 italic">Superestructural</span>
+                                    </h1>
+                                    <p class="text-blue-500 font-bold text-[10px] tracking-[0.3em] uppercase mt-2"></p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full lg:w-auto">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">Bajo Fundamental</label>
+                                    <div class="relative">
+                                        <select id="root-select" onchange="handleStateChange('root', this.value)" class="w-full lg:w-48 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:border-blue-600 cursor-pointer transition-all text-sm"></select>
+                                        <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-4 h-4"></i>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">US (Cualidad)</label>
+                                    <div class="relative">
+                                        <select id="type-select" onchange="handleStateChange('type', this.value)" class="w-full lg:w-56 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-blue-600 outline-none focus:border-blue-600 cursor-pointer transition-all text-sm">
+                                            <optgroup label="Tríadas">
+                                                <option value="maj">Tríada Mayor</option>
+                                                <option value="min">Tríada Menor</option>
+                                                <option value="aug">Tríada Aumentada</option>
+                                            </optgroup>
+                                            <optgroup label="Tétradas">
+                                                <option value="maj7">maj7</option>
+                                                <option value="m7">m7</option>
+                                                <option value="m_maj7">m(maj7)</option>
+                                                <option value="maj7_aug">maj7(#5)</option>
+                                            </optgroup>
+                                            <optgroup label="Cuartas">
+                                                <option value="qA">Cuartas A (4j+4j)</option>
+                                                <option value="qB">Cuartas B (4j+7)</option>
+                                                <option value="qC">Cuartas C (#4+7)</option>
+                                            </optgroup>
+                                        </select>
+                                        <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-300 pointer-events-none w-4 h-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                            <div id="family-filters" class="flex flex-wrap gap-2 w-full md:w-auto">
+                                <!-- Botones de familia generados por JS -->
+                            </div>
+
+                            <div class="flex gap-3 shrink-0 w-full md:w-auto justify-center">
+                                <button id="toggle-incompatible-btn" onclick="toggleIncompatible()" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm bg-slate-800 text-white">
+                                    <i data-lucide="eye-off" id="eye-icon" class="w-3.5 h-3.5"></i>
+                                    <span id="eye-text">Solo Posibles</span>
+                                </button>
+                                <button onclick="openHelpModal()" class="bg-indigo-600 text-white p-3.5 rounded-xl shadow-md hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center" title="Protocolo y Ayuda">
+                                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <div id="results-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- Fichas generadas por JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 6. INTERVAL -->
+        <div id="trocado" class="tab-content space-y-4">
+            <div class="card space-y-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-200 pb-3 gap-4">
+                    <h3 class="text-sm md:text-base font-black uppercase text-slate-800 flex items-center gap-2">
+                        <i data-lucide="arrow-up-down" class="w-5 h-5 text-blue-600"></i> Contrapunto Trocable
+                    </h3>
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <label class="text-xs font-bold uppercase text-slate-500 tracking-widest whitespace-nowrap">Trocado a la:</label>
+                        <select id="trocado-select" onchange="renderTrocado()" class="border-slate-300 font-black text-slate-800 rounded-md p-2 w-full md:w-48 outline-none text-sm">
+                            <!-- Opciones generadas por JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+                        <h4 class="text-[10px] font-black uppercase text-blue-800 tracking-widest mb-1">Consonancias Perfectas</h4>
+                        <p class="text-sm font-bold text-blue-900">Unísono, 5ta, 8va, 12ª, 15ª</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-sm">
+                        <h4 class="text-[10px] font-black uppercase text-emerald-800 tracking-widest mb-1">Consonancias Imperfectas</h4>
+                        <p class="text-sm font-bold text-emerald-900">3ra, 6ta, 10ª, 13ª</p>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-sm">
+                        <h4 class="text-[10px] font-black uppercase text-red-800 tracking-widest mb-1">Disonancias</h4>
+                        <p class="text-sm font-bold text-red-900">2da, 4ta, 7ma, 9na, 11ª, 14ª</p>
+                    </div>
+                </div>
+
+                <div id="trocado-table-container">
+                    <!-- Generado por JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. DESARROLLO DE ACORDES -->
+        <div id="desarrollo" class="tab-content space-y-4">
+            <div class="card space-y-4">
+                <h3 class="text-sm md:text-base font-black uppercase text-slate-800 flex items-center gap-2 border-b border-slate-200 pb-3">
+                    <i data-lucide="repeat" class="w-5 h-5 text-blue-600"></i> Desarrollo de Acordes
+                </h3>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm mb-4">
+                    <h4 class="text-sm md:text-base font-black uppercase tracking-widest text-blue-800 mb-3 flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-5 h-5"></i> Teoría: El Desarrollo de Acordes
+                    </h4>
+                    <p class="text-[13px] md:text-sm font-medium text-blue-900 leading-relaxed mb-4">
+                        Se emplea en acordes que duran un compás o más cuando se quiere dar <strong>riqueza armónica</strong>. Consiste básicamente en efectuar una subida o bajada desde el acorde hasta sus inversiones. Se subdividen en ascendentes y descendentes:
+                    </p>
+                    
+                    <div class="space-y-4 mt-3">
+                        <!-- Ascendente -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                            <h5 class="text-xs md:text-sm font-black uppercase tracking-widest text-blue-800 mb-3 border-b border-blue-50 pb-2">Desarrollos Ascendentes</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h6 class="text-[11px] md:text-xs font-bold uppercase text-slate-600 mb-1">Acordes Mayores (4 Movimientos)</h6>
+                                    <p class="text-[11px] md:text-xs text-slate-700 leading-relaxed mb-2">Se producen cuatro movimientos principales aprovechando las <em>passing notes</em> (blue notes):</p>
+                                    <ul class="text-[11px] md:text-xs text-slate-700 list-decimal pl-4 space-y-1.5 font-medium">
+                                        <li><strong>Fund. a 1ª Inversión:</strong> Acorde básico → Acorde tonal emplazado en su 2ª → Acorde de paso (passing notes) → Termina en 1ª Inv.</li>
+                                        <li><strong>1ª Inv. a 2ª Inversión:</strong> 1ª Inv. del básico → 1ª Inv. del tonal → Acorde de paso → Termina en 2ª Inv.</li>
+                                        <li><strong>2ª Inv. a 3ª Inversión:</strong> 2ª Inv. del básico → 2ª Inv. del tonal → Acorde de paso → Termina en 3ª Inv.</li>
+                                        <li><strong>3ª Inv. a Fundamental:</strong> 3ª Inv. del básico → 3ª Inv. del tonal → Acorde de paso → Termina en Fund.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h6 class="text-[11px] md:text-xs font-bold uppercase text-slate-600 mb-1">Acordes Menores</h6>
+                                    <p class="text-[11px] md:text-xs text-slate-700 leading-relaxed font-medium">
+                                        Los acordes menores, al carecer de escalas pentatónicas con presencia de blue notes, el desarrollo se plantea de manera diferente. En estos casos, se utilizan las estructuras relativas o grados diatónicos adyacentes correspondientes a su propio modo (ej. Dórico, Eólico, Locrio, etc.).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descendente -->
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
+                            <h5 class="text-xs md:text-sm font-black uppercase tracking-widest text-indigo-800 mb-3 border-b border-indigo-50 pb-2">Desarrollos Descendentes</h5>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <h6 class="text-[11px] md:text-xs font-bold uppercase text-slate-600 mb-1">Acordes Mayores y Menores (2 Movimientos)</h6>
+                                    <p class="text-[11px] md:text-xs text-slate-700 leading-relaxed mb-2">El recorrido descendente no es igual al ascendente, invirtiendo el orden lógico y simplificando las resoluciones a dos tramos principales (apoyándose en estructuras relativas y grados diatónicos adyacentes):</p>
+                                    <ul class="text-[11px] md:text-xs text-slate-700 list-decimal pl-4 space-y-1.5 font-medium">
+                                        <li><strong>Fund. a 2ª Inversión:</strong> Acorde básico → Acorde de paso / 7ma → Relativo tonal → Termina en 2ª Inv.</li>
+                                        <li><strong>2ª Inv. a Fundamental:</strong> 2ª Inv. básica → Acorde de paso / Relativo tonal → Acorde adyacente → Termina en Fund.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block tracking-widest">Raíz</label>
+                        <select id="dev-root" onchange="renderDesarrollo()" class="border-slate-300 font-bold text-slate-700 rounded-md p-2 w-full outline-none text-sm"></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block tracking-widest">Escala / Modo</label>
+                        <select id="dev-scale" onchange="updateTramos(); renderDesarrollo()" class="border-slate-300 font-bold text-slate-700 rounded-md p-2 w-full outline-none text-sm">
+                            <option value="JÓNICO">1. Jónico (1 2 3 4 5 6 7)</option>
+                            <option value="DÓRICO">2. Dórico (1 2 b3 4 5 6 b7)</option>
+                            <option value="FRIGIO">3. Frigio (1 b2 b3 4 5 b6 b7)</option>
+                            <option value="LIDIO">4. Lidio (1 2 3 #4 5 6 7)</option>
+                            <option value="MIXOLIDIO">5. Mixolidio (1 2 3 4 5 6 b7)</option>
+                            <option value="EÓLICO">6. Eólico (1 2 b3 4 5 b6 b7)</option>
+                            <option value="LOCRIO">7. Locrio (1 b2 b3 4 b5 b6 b7)</option>
+                            <option value="MIXOLIDIO_#4">8. Mixolidio #4 (1 2 3 #4 5 6 b7)</option>
+                            <option value="MIXOLIDIO_B2B6">9. Mixolidio b2b6 (1 b2 3 4 5 b6 b7)</option>
+                            <option value="DÓRICO_BECUADRO_7">10. Dórico ♮7 (1 2 b3 4 5 6 7)</option>
+                            <option value="EÓLICO_BECUADRO_7">11. Eólico ♮7 (1 2 b3 4 5 b6 7)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block tracking-widest">Dirección</label>
+                        <select id="dev-dir" onchange="updateTramos(); renderDesarrollo()" class="border-slate-300 font-bold text-slate-700 rounded-md p-2 w-full outline-none text-sm">
+                            <option value="ASCENDENTE">Ascendente</option>
+                            <option value="DESCENDENTE">Descendente</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block tracking-widest">Tramo</label>
+                        <select id="dev-tramo" onchange="renderDesarrollo()" class="border-slate-300 font-bold text-slate-700 rounded-md p-2 w-full outline-none text-sm">
+                        </select>
+                    </div>
+                </div>
+
+                <div id="dev-res" class="mt-8 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 overflow-x-auto pb-4">
+                    <!-- Acordes generados por JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. RANDOM -->
+        <div id="random" class="tab-content space-y-4 pb-12">
+            <div class="card bg-orange-50/30 border-orange-100 shadow-xl">
+                <div class="flex flex-col gap-6">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
+                        <div class="col-span-1"><label class="text-[9px] font-black mb-1 block uppercase text-orange-700">BPM</label><input type="number" id="metro-bpm" value="120" class="text-lg font-bold"></div>
+                        <div class="col-span-1"><label class="text-[9px] font-black mb-1 block uppercase text-orange-700">Pulsos</label><input type="number" id="metro-pulses" value="4" class="text-lg font-bold" onchange="updateMetroUI()"></div>
+                        <div class="col-span-1"><label class="text-[9px] font-black mb-1 block uppercase text-orange-700">Compases</label><input type="number" id="metro-compases" value="1" class="text-lg font-bold"></div>
+                        <div class="col-span-2 flex gap-2">
+                            <button id="btn-play-random" onclick="toggleRandomPlay()" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-xl font-black flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-orange-200">
+                                <i data-lucide="play" id="icon-play" class="w-5 h-5"></i><span id="text-play">START</span>
+                            </button>
+                            <button onclick="generateRandomGrid()" class="bg-white border-2 border-orange-200 text-orange-600 p-3 rounded-xl hover:bg-orange-100 transition-colors">
+                                <i data-lucide="shuffle" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center py-2 bg-white rounded-2xl border border-orange-100"><div id="metro-indicator" class="flex gap-4"></div></div>
+                </div>
+                <div class="mt-6"><div id="note-grid" class="note-grid"></div></div>
+            </div>
+        </div>
+
+        <!-- Modal Notas a Evitar -->
+        <div id="modal-notas" class="fixed inset-0 bg-slate-900/50 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 m-4 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                    <h4 class="text-xl font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 text-amber-500"></i> Notas a Evitar
+                    </h4>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <p class="text-sm md:text-base font-medium text-slate-700 leading-relaxed mb-3">
+                    En todo sistema modal encontramos dos tipos de modos: unos perfectos y otros imperfectos. Los imperfectos son aquellos en los cuales hallamos algunas notas que <strong>no pueden ser incluidas dentro de la estructura del acorde</strong> que les corresponde. A dichas notas se les denomina <em>notas a evitar</em>.
+                </p>
+                <p class="text-sm md:text-base font-medium text-slate-700 leading-relaxed mb-3">
+                    Para encontrar las notas a evitar se han establecido dos reglas básicas:
+                </p>
+                <ul class="text-sm md:text-base text-slate-700 space-y-2 font-medium list-decimal pl-5 mb-4">
+                    <li><strong>Semitono Ascendente:</strong> Que no se forme semitono ascendente entre cualquier nota del acorde y la nota del modo que le corresponde inmediatamente superior.</li>
+                    <li><strong>Tritono con Tonos Guía:</strong> Que no se forme tritono entre los tonos guía del acorde (3ra o 7ma) y cualquier nota del modo que no pertenezca al acorde.</li>
+                </ul>
+
+                <details class="group border border-slate-200 rounded-xl bg-slate-50 mt-4">
+                    <summary class="cursor-pointer font-bold text-slate-800 p-4 list-none flex justify-between items-center outline-none">
+                        <span>Ver notas a evitar por tipo de acorde (Escala Mayor)</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-500 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <div class="p-4 pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center">
+                            <div><span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">I (Jónico)</span><span class="font-bold text-slate-800">maj7</span></div>
+                            <span class="font-black text-red-600 text-sm">4ta justa</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center">
+                            <div><span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">II (Dórico)</span><span class="font-bold text-slate-800">m7</span></div>
+                            <span class="font-black text-red-600 text-sm">6ta mayor</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center">
+                            <div><span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">III (Frigio)</span><span class="font-bold text-slate-800">m7</span></div>
+                            <span class="font-black text-red-600 text-sm">b2 y b6</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center">
+                            <div><span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">IV (Lidio)</span><span class="font-bold text-slate-800">maj7</span></div>
+                            <span class="font-black text-emerald-600 text-sm">Ninguna</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center">
+                            <div><span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">V (Mixolidio)</span><span class="font-bold text-slate-800">7</span></div>
+                            <span class="font-black text-red-600 text-sm">4ta justa</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center">
+                            <div><span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">VI (Eólico)</span><span class="font-bold text-slate-800">m7</span></div>
+                            <span class="font-black text-red-600 text-sm">b6</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center">
+                            <div><span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">VII (Locrio)</span><span class="font-bold text-slate-800">m7(b5)</span></div>
+                            <span class="font-black text-red-600 text-sm">b2</span>
+                        </div>
+                    </div>
+                </details>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2 rounded-lg transition-colors">Entendido</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL AYUDA DETALLADA ANALIZADOR -->
+    <div id="help-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden relative modal-content-enter max-h-[90vh] flex flex-col">
+            <button onclick="closeHelpModal()" class="absolute top-8 right-8 p-4 rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all z-10">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            
+            <div class="p-10 md:p-14 overflow-y-auto">
+                <div class="flex items-center gap-5 mb-10">
+                    <div class="bg-indigo-600 p-4 rounded-3xl text-white shadow-indigo-100 shadow-2xl">
+                        <i data-lucide="book-open" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black uppercase tracking-tighter leading-tight">Protocolo de <span class="text-indigo-600 italic">Análisis</span></h2>
+                        <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest mt-1">Guía Completa de la Herramienta</p>
+                    </div>
+                </div>
+
+                <div class="space-y-10 text-slate-600">
+                    <section class="space-y-5">
+                        <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b border-indigo-50 pb-3 flex items-center gap-2"><i data-lucide="target" class="w-4 h-4"></i> 1. Funcionalidad del Motor</h3>
+                        <p class="text-sm font-medium leading-relaxed">
+                            Esta herramienta analiza la relación exacta entre una <strong>Superestructura (US)</strong> —bloque superior de notas— y un <strong>Bajo</strong> —fundamental—.
+                        </p>
+                        <p class="text-sm font-medium leading-relaxed">
+                            El motor utiliza un sistema de <strong>Validación Cruzada Enarmónica</strong>: si seleccionas un modo y el bajo actual no funciona, el sistema busca automáticamente si su nombre alternativo (ej. de G# a Ab) desbloquea una escala válida.
+                        </p>
+                        <button onclick="openScalesModal()" class="flex items-center gap-3 px-6 py-4 bg-indigo-50 text-indigo-700 rounded-2xl font-black text-[11px] uppercase tracking-widest border-2 border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 transition-all w-full">
+                            <i data-lucide="file-text" class="w-4 h-4"></i> Ver Diccionario de 28 Escalas y Fórmulas
+                        </button>
+                    </section>
+
+                    <section class="space-y-5">
+                        <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b border-indigo-50 pb-3 flex items-center gap-2"><i data-lucide="music" class="w-4 h-4"></i> 2. Ortografía Armónica Estricta</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
+                                <p class="font-black text-slate-800 text-[10px] uppercase mb-2">Bemoles Minúsculos (b)</p>
+                                <p class="text-xs font-medium leading-relaxed text-slate-500">Se utiliza estrictamente la 'b' minúscula para diferenciar las alteraciones de las letras de las notas, evitando errores visuales.</p>
+                            </div>
+                            <div class="p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
+                                <p class="font-black text-slate-800 text-[10px] uppercase mb-2">Símbolo Becuadro (♮)</p>
+                                <p class="text-xs font-medium leading-relaxed text-slate-500">Para indicar notas naturales en contextos alterados se utiliza el símbolo oficial ♮, garantizando una lectura musical estándar.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="space-y-5">
+                        <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b border-indigo-50 pb-3 flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4"></i> 3. Simplificación de Grados</h3>
+                        <p class="text-sm font-medium leading-relaxed">
+                            Para optimizar el análisis rápido de estructuras, las tensiones de extensión se han reducido a sus grados de octava simple:
+                        </p>
+                        <div class="flex justify-around items-center bg-slate-50 p-6 rounded-3xl border border-slate-100 font-black text-indigo-600 text-lg">
+                            <div class="text-center"><span class="block text-slate-400 text-[10px] uppercase">9na</span> 2</div>
+                            <div class="text-center font-normal text-slate-300">→</div>
+                            <div class="text-center"><span class="block text-slate-400 text-[10px] uppercase">11na</span> 4</div>
+                            <div class="text-center font-normal text-slate-300">→</div>
+                            <div class="text-center"><span class="block text-slate-400 text-[10px] uppercase">13na</span> 6</div>
+                        </div>
+                    </section>
+
+                    <div class="p-8 bg-slate-900 rounded-[3rem] text-white shadow-2xl">
+                        <h5 class="text-[10px] font-black uppercase text-indigo-400 mb-3 tracking-[0.3em]">Parsimonia Interválica</h5>
+                        <p class="text-xs text-slate-400 leading-relaxed italic font-medium opacity-90">
+                            "Un acorde no es solo un conjunto de sonidos, es una ortografía lógica. Este motor garantiza que tus superposiciones sean modalmente coherentes y gramaticalmente correctas."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DICCIONARIO DE ESCALAS (MODAL ANIDADO) -->
+    <div id="scales-modal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl">
+        <div class="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl overflow-hidden relative modal-content-enter max-h-[90vh] flex flex-col">
+            <button onclick="closeScalesModal()" class="absolute top-8 right-8 p-4 rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all z-10">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            
+            <div class="p-10 md:p-16 overflow-y-auto">
+                <div class="flex items-center gap-6 mb-12">
+                    <div class="bg-blue-600 p-5 rounded-[2.5rem] text-white shadow-blue-100 shadow-2xl">
+                        <i data-lucide="list" class="w-10 h-10"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-4xl font-black uppercase tracking-tighter text-slate-900">Diccionario de <span class="text-blue-600 italic">28 Escalas</span></h2>
+                        <p class="text-[11px] text-slate-400 font-black uppercase tracking-[0.3em] mt-2">Fórmulas Exactas (2-4-6 / b minúscula / ♮)</p>
+                    </div>
+                </div>
+
+                <div id="scales-grid" class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+                    <!-- Llenado por JS -->
+                </div>
+
+                <div class="mt-14 p-8 bg-blue-50 border-2 border-blue-100 rounded-[3rem] text-center shadow-inner">
+                    <p class="text-[11px] font-black text-blue-700 leading-relaxed uppercase tracking-[0.3em] italic opacity-80">
+                        Modelo de Armonía Profesional — Versión Simplificada
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const NOTES_C = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const NOTES_POOL = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let nextTickTime = 0, timerID = null;
+
+        function playNote(freq, dur=0.5, vol=0.15) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = 'triangle'; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(vol, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + dur);
+        }
+
+        function playVoices(voices, dur=1.5, startTime=null) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const time = startTime !== null ? startTime : audioCtx.currentTime;
+            voices.forEach(midi => {
+                const freq = 440 * Math.pow(2, (midi - 69) / 12);
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(freq, time);
+                g.gain.setValueAtTime(0.08, time); 
+                g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                o.start(time);
+                o.stop(time + dur);
+            });
+        }
+
+        function playTick(time, type='normal') {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.frequency.setValueAtTime(type === 'accent' ? 1200 : 800, time);
+            g.gain.setValueAtTime(0.1, time);
+            g.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(time); o.stop(time + 0.05);
+        }
+
+        async function initMIDI() {
+            const statusEl = document.getElementById('midi-status');
+            if (!navigator.requestMIDIAccess) { statusEl.innerText = "MIDI: No Soportado"; return; }
+            try {
+                const midi = await navigator.requestMIDIAccess();
+                statusEl.innerText = "MIDI: Conectado";
+                statusEl.classList.replace('text-slate-400', 'text-green-600');
+                for (let input of midi.inputs.values()) {
+                    input.onmidimessage = (msg) => {
+                        const [cmd, note, vel] = msg.data;
+                        if (cmd === 144 && vel > 0) {
+                            const key = document.querySelector(`.key[data-midi="${note}"]`);
+                            if (key) pressKey(key, false);
+                        }
+                    };
+                }
+            } catch (err) { statusEl.innerText = "MIDI: Bloqueado (Permiso)"; }
+        }
+
+        function initPiano() {
+            const p = document.getElementById('piano');
+            for(let i=21; i<=108; i++) {
+                const n = NOTES_C[i%12], oct = Math.floor(i/12)-1, isB = n.includes('#'), k = document.createElement('div');
+                k.className = `key ${isB?'black-key':'white-key'}`;
+                k.innerHTML = `<span>${n}${oct}</span>`;
+                k.dataset.midi = i; k.dataset.freq = 440 * Math.pow(2,(i-69)/12);
+                k.addEventListener('mousedown', (e) => { e.preventDefault(); pressKey(k); });
+                p.appendChild(k);
+            }
+            setTimeout(() => { document.querySelector('.piano-outer').scrollLeft = 520; }, 200);
+        }
+
+        function pressKey(k, play=true) {
+            const m = parseInt(k.dataset.midi), f = parseFloat(k.dataset.freq);
+            document.getElementById('midi-res').innerText = m;
+            document.getElementById('midi-aca-res').innerText = m - 12;
+            document.getElementById('freq-res').innerText = f.toFixed(2) + " Hz";
+            if(play) playNote(f);
+            k.classList.add('active');
+            setTimeout(() => k.classList.remove('active'), 150);
+        }
+
+        const COLORS_DATA = {
+            jonico: [
+                {m:"Lidio", v:["#4","7","3","6","2","(5) opc"]},
+                {m:"Jónico (1)", v:["7","4","3","6","2","5"]},
+                {m:"Jónico (2)", v:["7","3","2","6","5","(No 4)"]},
+                {m:"Mixolidio (1)", v:["b7","4","3","6","2","5"]},
+                {m:"Mixolidio (2)", v:["b7","3","2","6","5","(No 4)"]},
+                {m:"Dórico", v:["♮6","b3","b7","2","5","4"]},
+                {m:"Eólico", v:["b6","2","5","b3","b7","4"]},
+                {m:"Frigio", v:["b2","5","4","b7","b3","b6"]},
+                {m:"Locrio", v:["b5","b2","b7","b6","b3","4"]}
+            ],
+            menorArm: [
+                {m:"Jónico #5", v:["4","7","#5*","3","2","6"]},         
+                {m:"Lidio #2", v:["#4","7","#2*","3","6","5"]},         
+                {m:"Mixolidio b2 b6", v:["b7","4","b2*","b6*","3","5"]}, 
+                {m:"Dórico #4", v:["6","2","#4*","b3","b7","5"]},        
+                {m:"Eólico ♮7", v:["b6","2","♮7*","b3","5","4"]},        
+                {m:"Locrio ♮6", v:["b5","b2","♮6*","b7","b3","4"]},      
+                {m:"Locrio b4 bb7", v:["b5","b2","b4*","bb7*","b6","b3"]} 
+            ],
+            menorMel: [
+                {m:"Lidio #5", v:["#4","7","#5*","3","6","2"]},                  
+                {m:"Mixolidio #4", v:["b7","4","#4*","3","6","2"]},               
+                {m:"Mixolidio b6", v:["b7","4","b6*","3","2","5"]},              
+                {m:"Dórico ♮7", v:["6","2","♮7*","b3","5","4"]},                 
+                {m:"Frigio ♮6", v:["b2","5","♮6*","b3","b7","4"]},                
+                {m:"Locrio ♮2", v:["b5","b2","♮2*","b7","b6","4"]},                
+                {m:"Mixolidia Alterada", v:["b7","3","b6*","b5*","b2*","#2*"]}    
+            ],
+            mayorArm: [
+                {m:"Lidio #2 #5", v:["#4","7","#2*","#5*","3","6"]},         
+                {m:"Jónico b6", v:["4","7","b6*","3","5","2"]},              
+                {m:"Mixolidio b2", v:["b7","4","b2*","3","6","5"]},          
+                {m:"Mixolidio b2 #2 b6", v:["b7","4","b2*","#2*","b6*","5"]}, 
+                {m:"Dórico #4 ♮7", v:["6","2","#4*","♮7*","b3","5"]},        
+                {m:"Locrio ♮2 ♮6", v:["b5","b2","♮2*","♮6*","b3","b7"]},       
+                {m:"Locrio bb7", v:["b5","b2","bb7*","b3","4","b6"]}        
+            ]
+        };
+
+        function renderColors() {
+            const key = document.getElementById('parent-scale-select').value;
+            const data = COLORS_DATA[key] || [];
+            document.getElementById('colors-body').innerHTML = data.map(m => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="font-bold text-slate-800 text-[11px]">${m.m}</td>
+                    ${m.v.map((val, i) => {
+                        let text = val, isAlt = false;
+                        if (text.includes('*')) { isAlt = true; text = text.replace('*', ''); }
+                        let styling = "text-slate-500 font-medium";
+                        
+                        if(isAlt) {
+                            styling = "bg-amber-100 font-black text-amber-800 text-sm border border-amber-300 shadow-sm";
+                        } else if(i === 0) {
+                            styling = "bg-blue-50/70 font-black text-blue-700 text-sm";
+                        } else if(i === 1) {
+                            styling = "bg-indigo-50/70 font-black text-indigo-700 text-sm";
+                        }
+                        
+                        return `<td class="text-center ${styling}">${text}</td>`;
+                    }).join('')}
+                </tr>`).join('');
+        }
+
+        const STAVE_DATA = [{ev:104,a:"Educación (Gigante)"},{ev:90,a:"Educación / Lectura fácil"},{ev:84,a:"Piano / Lead Sheet (Poco común)"},{ev:79,a:"Partes Instrumentales / Piano / Lead"},{ev:74,a:"Instrumental estándar"},{ev:70,a:"Pocket Score (Tamaño bolsillo)"},{ev:65,a:"Full Score (Orquesta completa)"}];
+
+        function updateStaveInfo() {
+            const i = document.getElementById('stave-select').value;
+            renderStave(STAVE_DATA[i].ev);
+            document.getElementById('stave-app').innerText = "Aplicación Sugerida: " + STAVE_DATA[i].a;
+        }
+
+        function renderStave(ev) {
+            const container = document.getElementById('stave-results');
+            const pts = ev * 0.25;
+            const measures = [{l:'EVPUs', v:ev},{l:'Puntos / Points', v:pts.toFixed(2)},{l:'Milímetros / Millimeters', v:(ev * 0.08819).toFixed(3)},{l:'Espacios / Spaces', v:(ev * 0.04167).toFixed(3)},{l:'Picas / Picas', v:(ev * 0.02083).toFixed(3)},{l:'Centímetros / Centimeters', v:(ev * 0.00882).toFixed(4)},{l:'Pulgadas / Inches', v:(ev * 0.00347).toFixed(4)},{l:'Fuente Sug. / Rec. Font', v:(pts * 1.2).toFixed(1) + "pt"}];
+            container.innerHTML = measures.map(item => `
+                <div class="p-5 bg-white border-2 border-blue-500 shadow-lg rounded-xl text-center flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+                    <span class="block text-[10px] md:text-xs font-black text-blue-700 uppercase tracking-widest leading-tight mb-2">${item.l}</span>
+                    <span class="text-2xl md:text-3xl font-black text-slate-900 drop-shadow-sm">${item.v}</span>
+                </div>`).join('');
+        }
+
+        function updateCustomStave() {
+            const v = parseFloat(document.getElementById('custom-evpu').value);
+            if(v) { renderStave(v); document.getElementById('stave-app').innerText = "Cálculo para Talla Personalizada / Custom Size"; }
+        }
+
+        function showBartokSubTab(tab) {
+            const btnDiatonic = document.getElementById('btab-func');
+            const btnPuntos = document.getElementById('btab-puntos');
+            const contentFunc = document.getElementById('bcontent-func');
+            const contentPuntos = document.getElementById('bcontent-puntos');
+
+            const inactiveBtnClass = "px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors";
+            const activeBtnClass = "px-3 py-2 text-[10px] md:text-xs font-black uppercase rounded-lg bg-blue-600 text-white transition-colors shadow-sm";
+
+            if (tab === 'func') {
+                btnDiatonic.className = activeBtnClass;
+                btnPuntos.className = inactiveBtnClass;
+                contentFunc.classList.replace('hidden', 'block');
+                contentPuntos.classList.replace('block', 'hidden');
+            } else {
+                btnPuntos.className = activeBtnClass;
+                btnDiatonic.className = inactiveBtnClass;
+                contentPuntos.classList.replace('hidden', 'block');
+                contentFunc.classList.replace('block', 'hidden');
+            }
+        }
+
+        function renderBartokGrid() {
+            const rootIdx = parseInt(document.getElementById('bartok-root-select').value);
+            const getNote = (interval) => NOTES_POOL[(rootIdx + interval) % 12];
+            const axes = [
+                { label: 'Tónica', color: 'bg-tonica', textCol: 'text-emerald-700', top: getNote(0), bottom: getNote(6), left: getNote(9), right: getNote(3), chords: [`${getNote(0)}maj7`, `${getNote(0)}m7`, `${getNote(9)}m7`, `${getNote(3)}maj7`, `${getNote(6)}m7(b5)`] },
+                { label: 'Sub-Dominante', color: 'bg-subdominante', textCol: 'text-blue-700', top: getNote(5), bottom: getNote(11), left: getNote(2), right: getNote(8), chords: [`${getNote(5)}maj7`, `${getNote(5)}m7`, `${getNote(5)}mMaj7`, `${getNote(2)}m7`, `${getNote(2)}m7(b5)`, `${getNote(11)}m7(b5)`, `${getNote(8)}maj7`] },
+                { label: 'Dominante', color: 'bg-dominante', textCol: 'text-red-700', top: getNote(7), bottom: getNote(1), left: getNote(4), right: getNote(10), chords: [`${getNote(7)}7`, `${getNote(4)}7`, `${getNote(10)}7`, `${getNote(1)}7`] }
+            ];
+            document.getElementById('bartok-grid').innerHTML = axes.map(a => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col items-center shadow-sm relative overflow-hidden">
+                    <span class="absolute top-0 inset-x-0 h-1 ${a.color}"></span>
+                    <h4 class="text-xs font-black uppercase tracking-widest ${a.textCol} mb-6 mt-2">${a.label}</h4>
+                    <div class="relative w-32 h-32 flex items-center justify-center mb-6">
+                        <div class="absolute w-0.5 h-full bg-slate-300"></div><div class="absolute h-0.5 w-full bg-slate-300"></div>
+                        <span class="absolute top-0 bg-slate-50 px-2 text-sm font-black text-slate-700">${a.top}</span>
+                        <span class="absolute bottom-0 bg-slate-50 px-2 text-sm font-black text-slate-700">${a.bottom}</span>
+                        <span class="absolute left-0 bg-slate-50 py-2 pr-2 text-sm font-black text-slate-700">${a.left}</span>
+                        <span class="absolute right-0 bg-slate-50 py-2 pl-2 text-sm font-black text-slate-700">${a.right}</span>
+                        <div class="w-3 h-3 rounded-full ${a.color} z-10 shadow-md"></div>
+                    </div>
+                    <div class="w-full">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1 mb-2 text-center">Estructuras</p>
+                        <div class="flex flex-wrap gap-2 justify-center">${a.chords.map(c => `<span class="px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-600 shadow-sm">${c}</span>`).join('')}</div>
+                    </div>
+                </div>`).join('');
+        }
+
+        const CARDINAL_GROUPS = { 1: { n: 'C', s: 'F#', e: 'Eb', o: 'A' }, 2: { n: 'Db', s: 'G', e: 'E', o: 'Bb' }, 3: { n: 'D', s: 'Ab', e: 'F', o: 'B' } };
+        const TRIANGLE_GROUPS = [['C', 'E', 'Ab'], ['Db', 'F', 'A'], ['D', 'F#', 'Bb'], ['Eb', 'G', 'B']];
+        const POLE_SYMBOLS = { n: '↑', s: '↓', e: '→', o: '←' };
+
+        function initBartok() {
+            const rootSelector = document.getElementById('bartok-root-select');
+            rootSelector.innerHTML = NOTES_POOL.map((note, index) => `<option value="${index}">${note}</option>`).join('');
+            rootSelector.value = 0; renderBartokGrid(); initPuntosCardinales(); updateRouteOptions();
+        }
+
+        function initPuntosCardinales() {
+            const groups = [{ label: 'Grupo 1', color: 'bg-emerald-500', textCol: 'text-emerald-700', n: 'C', s: 'F#', e: 'Eb', o: 'A' }, { label: 'Grupo 2', color: 'bg-red-500', textCol: 'text-red-700', n: 'Db', s: 'G', e: 'E', o: 'Bb' }, { label: 'Grupo 3', color: 'bg-blue-500', textCol: 'text-blue-700', n: 'D', s: 'Ab', e: 'F', o: 'B' }];
+            document.getElementById('puntos-grid').innerHTML = groups.map(g => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col items-center shadow-sm relative overflow-hidden">
+                    <span class="absolute top-0 inset-x-0 h-1 ${g.color}"></span>
+                    <h4 class="text-xs font-black uppercase tracking-widest ${g.textCol} mb-12 mt-2">${g.label}</h4>
+                    <div class="relative w-40 h-40 flex items-center justify-center mb-8">
+                        <div class="absolute w-0.5 h-full bg-slate-300"></div><div class="absolute h-0.5 w-full bg-slate-300"></div>
+                        <div class="absolute top-0 flex flex-col items-center -mt-8 bg-slate-50 px-2 py-1 rounded-md border border-slate-200 shadow-sm z-10">
+                            <span class="text-[8px] font-black text-slate-400">N (↑)</span><span class="text-[10px] font-black text-slate-800 whitespace-nowrap">${g.n}maj7 / ${g.n}m7</span>
+                        </div>
+                        <div class="absolute bottom-0 flex flex-col items-center -mb-8 bg-slate-50 px-2 py-1 rounded-md border border-slate-200 shadow-sm z-10">
+                            <span class="text-[10px] font-black text-slate-800 whitespace-nowrap">${g.s}maj7 / ${g.s}m7</span><span class="text-[8px] font-black text-slate-400">S (↓)</span>
+                        </div>
+                        <div class="absolute right-0 flex items-center -mr-12 bg-slate-50 px-2 py-1 rounded-md border border-slate-200 shadow-sm z-10">
+                            <span class="text-[10px] font-black text-slate-800 whitespace-nowrap pr-1">${g.e}maj7 / ${g.e}m7</span><span class="text-[8px] font-black text-slate-400">E (→)</span>
+                        </div>
+                        <div class="absolute left-0 flex items-center -ml-12 bg-slate-50 px-2 py-1 rounded-md border border-slate-200 shadow-sm z-10">
+                            <span class="text-[8px] font-black text-slate-400 pr-1">O (←)</span><span class="text-[10px] font-black text-slate-800 whitespace-nowrap">${g.o}maj7 / ${g.o}m7</span>
+                        </div>
+                        <div class="w-4 h-4 rounded-full ${g.color} z-10 shadow-md"></div>
+                    </div>
+                </div>`).join('');
+
+            document.getElementById('triangles-container').innerHTML = TRIANGLE_GROUPS.map(t => `
+                <div class="bg-white border-2 border-amber-100 rounded-xl p-5 flex flex-col items-center shadow-sm hover:shadow-md transition-shadow relative">
+                    <span class="absolute top-0 inset-x-0 h-1 bg-amber-400"></span>
+                    <div class="relative w-24 h-24 flex items-center justify-center mt-2 mb-1">
+                        <svg class="absolute inset-0 w-full h-full text-amber-300" viewBox="0 0 100 100" overflow="visible">
+                            <polygon points="50,10 90,85 10,85" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="absolute -top-4 bg-white px-2 text-sm font-black text-slate-700">${t[0]}</span>
+                        <span class="absolute -bottom-3 -right-4 bg-white px-2 text-sm font-black text-slate-700">${t[1]}</span>
+                        <span class="absolute -bottom-3 -left-4 bg-white px-2 text-sm font-black text-slate-700">${t[2]}</span>
+                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500 z-10 shadow-sm"></div>
+                    </div>
+                </div>`).join('');
+        }
+
+        let routeProgression = [];
+        let currentVoices = null;
+
+        function updateRouteOptions() {
+            const groupSelect = document.getElementById('route-group'), pointSelect = document.getElementById('route-point');
+            if (routeProgression.length === 0) {
+                groupSelect.disabled = false;
+                const gId = groupSelect.value;
+                if (gId === 'any') {
+                    pointSelect.innerHTML = NOTES_POOL.map(n => { let i = getChordCoord(n); return `<option value="${n}" data-group="${i.group}" data-pole="${i.pole}">${n} (Grupo ${i.group} - Polo ${POLE_SYMBOLS[i.pole]})</option>`; }).join('');
+                } else {
+                    pointSelect.innerHTML = Object.entries(CARDINAL_GROUPS[gId]).map(([k,v]) => `<option value="${v}" data-group="${gId}" data-pole="${k}">${v} (Grupo ${gId} - Polo ${POLE_SYMBOLS[k]})</option>`).join('');
+                }
+                return;
+            }
+
+            const last = routeProgression[routeProgression.length - 1];
+            groupSelect.disabled = true;
+            let lastG = parseInt(last.group), lastP = last.pole;
+
+            const axisNotes = Object.entries(CARDINAL_GROUPS[lastG]).map(([p, n]) => ({ note: n, pole: p, type: 'Eje (Cruz)', group: lastG }));
+            const tri = TRIANGLE_GROUPS.find(t => t.includes(last.note));
+            const triNotes = tri.map(n => { let i = getChordCoord(n); return { note: n, pole: i.pole, type: 'S3 (Triángulo)', group: i.group }; });
+
+            const coordNotes = [];
+            for (let [gid, pts] of Object.entries(CARDINAL_GROUPS)) {
+                let currentG = parseInt(gid);
+                if (currentG === lastG) continue;
+                if (Math.abs(currentG - lastG) === 1) {
+                    coordNotes.push({ note: pts[lastP], pole: lastP, type: 'Polo Adyacente', group: currentG });
+                }
+            }
+
+            const nextGId = (lastG % 3) + 1;
+            const allValid = [...axisNotes, ...triNotes, ...coordNotes].filter((item, index, self) => {
+                if (item.note === last.note) return false;
+                if (self.findIndex(t => t.note === item.note) !== index) return false;
+                if (lastP === 'n' && item.group === nextGId && item.pole === 's') return false;
+                return true;
+            });
+
+            pointSelect.innerHTML = allValid.map(i => `<option value="${i.note}" data-group="${i.group}" data-pole="${i.pole}">${i.note} (${POLE_SYMBOLS[i.pole]} - G${i.group} - ${i.type})</option>`).join('');
+        }
+
+        function getChordCoord(note) {
+            for (let [gid, pts] of Object.entries(CARDINAL_GROUPS)) {
+                for (let [pole, n] of Object.entries(pts)) { if (n === note) return { group: gid, pole: pole }; }
+            }
+            return { group: '?', pole: '?' };
+        }
+
+        function addRouteChord() {
+            const pointSelect = document.getElementById('route-point'), note = pointSelect.value, quality = document.getElementById('route-quality').value, isMajor = quality === 'Mayor';
+            const sel = pointSelect.options[pointSelect.selectedIndex], group = sel.getAttribute('data-group'), pole = sel.getAttribute('data-pole');
+            const NOTE_MAP = { 'C': 0, 'Db': 1, 'C#': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11 };
+
+            if (!currentVoices) {
+                const rootPc = NOTE_MAP[note];
+                currentVoices = [rootPc + 36, rootPc + 48, rootPc + 48 + (isMajor ? 4 : 3), rootPc + 48 + 7];
+            } else {
+                currentVoices = getNextVoices(currentVoices, note, isMajor);
+            }
+            playVoices(currentVoices);
+            routeProgression.push({ note, quality, group, pole, voices: currentVoices });
+            renderRoute(); updateRouteOptions();
+        }
+
+        function getNextVoices(prevVoices, nextRootStr, isMajor) {
+            const NOTE_MAP = { 'C': 0, 'Db': 1, 'C#': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11 };
+            const rootPc = NOTE_MAP[nextRootStr];
+            const pcs = [rootPc, (rootPc + (isMajor ? 4 : 3)) % 12, (rootPc + 7) % 12];
+            let bassPrev = prevVoices[0], bestBass = bassPrev, minBassDist = Infinity;
+            for (let oct = 2; oct <= 4; oct++) { let b = rootPc + oct * 12; let dist = Math.abs(b - bassPrev); if (dist < minBassDist) { minBassDist = dist; bestBass = b; } }
+            let bassDelta = bestBass - bassPrev; if (bassDelta === 0) bassDelta = 1; 
+            let prevUpper = prevVoices.slice(1), prevPcs = prevUpper.map(v => v % 12), hasCommon = pcs.some(pc => prevPcs.includes(pc));
+            const perms = [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
+            let bestUpper = null, bestCost = Infinity;
+            for (let perm of perms) {
+                let nextUpper = [], isValid = true, cost = 0;
+                for (let i = 0; i < 3; i++) {
+                    let targetPc = pcs[perm[i]], prevV = prevUpper[i], closestV = targetPc, minDist = Infinity;
+                    for (let oct = 3; oct <= 6; oct++) { let v = targetPc + oct * 12; let dist = Math.abs(v - prevV); if (dist < minDist) { minDist = dist; closestV = v; } }
+                    nextUpper.push(closestV); let voiceDelta = closestV - prevV;
+                    if (hasCommon) { if (prevV % 12 === targetPc) { if (voiceDelta !== 0) isValid = false; } else if (prevPcs.includes(targetPc)) { isValid = false; } }
+                    else { if (bassDelta > 0 && voiceDelta > 0) isValid = false; if (bassDelta < 0 && voiceDelta < 0) isValid = false; }
+                    cost += Math.abs(voiceDelta);
+                }
+                if (isValid && cost < bestCost) { bestCost = cost; bestUpper = nextUpper; }
+            }
+            if (!bestUpper) {
+                bestCost = Infinity;
+                for (let perm of perms) {
+                    let nextUpper = [], cost = 0;
+                    for (let i = 0; i < 3; i++) {
+                        let targetPc = pcs[perm[i]], prevV = prevUpper[i], closestV = targetPc, minDist = Infinity;
+                        for (let oct = 3; oct <= 6; oct++) { let v = targetPc + oct * 12; let dist = Math.abs(v - prevV); if (dist < minDist) { minDist = dist; closestV = v; } }
+                        nextUpper.push(closestV); cost += Math.abs(closestV - prevV);
+                    }
+                    if (cost < bestCost) { bestCost = cost; bestUpper = nextUpper; }
+                }
+            }
+            return [bestBass, ...bestUpper];
+        }
+
+        function renderRoute() {
+            const container = document.getElementById('route-progression');
+            if (routeProgression.length === 0) { container.innerHTML = `<div class="text-xs text-slate-400 font-medium italic p-2">Selecciona el primer acorde para comenzar...</div>`; return; }
+            container.innerHTML = routeProgression.map((chord, index) => {
+                const scale = chord.quality === 'Mayor' ? 'Lidia / Aumentada' : 'Dórica';
+                return `
+                    <div class="flex flex-col items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm min-w-[140px] transform transition-transform hover:scale-105">
+                        <div class="text-[10px] text-blue-600 font-black mb-1 uppercase tracking-tighter w-full text-center bg-blue-50 py-1 rounded">G${chord.group} ${POLE_SYMBOLS[chord.pole]}</div>
+                        <span class="text-3xl font-black text-slate-800 my-2">${chord.note}${chord.quality === 'Mayor' ? 'maj7' : 'm7'}</span>
+                        <span class="mt-1 text-[11px] text-slate-500 font-bold text-center leading-tight">Escala:<br>${scale}</span>
+                    </div>
+                    ${index < routeProgression.length - 1 ? '<div class="flex items-center text-slate-300 px-1"><i data-lucide="arrow-right" class="w-6 h-6"></i></div>' : ''}
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function playRouteSequence() {
+            if (routeProgression.length === 0) return;
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            let time = audioCtx.currentTime + 0.1;
+            routeProgression.forEach((chord) => {
+                chord.voices.forEach(midi => {
+                    const freq = 440 * Math.pow(2, (midi - 69) / 12);
+                    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                    o.type = 'triangle'; o.frequency.setValueAtTime(freq, time);
+                    g.gain.setValueAtTime(0.08, time); g.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.start(time); o.stop(time + 1.2);
+                });
+                time += 1.5; 
+            });
+        }
+
+        function clearRoute() { routeProgression = []; currentVoices = null; renderRoute(); updateRouteOptions(); }
+
+        let cBeat = 0, cMeas = 0, cNoteIdx = 0, isPlay = false, waitBeats = 0;
+        
+        function scheduler() {
+            while (nextTickTime < audioCtx.currentTime + 0.1) {
+                const bpm = parseInt(document.getElementById('metro-bpm').value) || 120, 
+                      ppC = parseInt(document.getElementById('metro-pulses').value) || 4, 
+                      cpN = parseInt(document.getElementById('metro-compases').value) || 1;
+                
+                if (waitBeats === 0) {
+                    let beatsLeft = (cpN * ppC) - (cMeas * ppC + cBeat);
+                    if (beatsLeft === 2 && cNoteIdx < 11) {
+                        let nextEl = document.getElementById(`nb-${cNoteIdx + 1}`);
+                        if (nextEl) {
+                            const rect = nextEl.getBoundingClientRect();
+                            const isVisible = (rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth));
+                            if (!isVisible) nextEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                }
+
+                if (waitBeats > 0) {
+                    scheduleNote(-1, nextTickTime);
+                    waitBeats--;
+                } else {
+                    scheduleNote(cBeat, nextTickTime);
+                    cBeat++;
+                    if (cBeat >= ppC) { 
+                        cBeat = 0; 
+                        cMeas++; 
+                        if (cMeas >= cpN) { 
+                            cMeas = 0; 
+                            cNoteIdx++;
+                            if (cNoteIdx >= 12) {
+                                cNoteIdx = 0; 
+                                waitBeats = 2;
+                                generateRandomGrid(); 
+                                highlight(0);
+                                document.getElementById('note-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } 
+                        } 
+                    }
+                }
+                nextTickTime += (60.0 / bpm); 
+            }
+            if (isPlay) timerID = setTimeout(scheduler, 25);
+        }
+
+        function scheduleNote(beat, time) {
+            const isWait = beat < 0;
+            playTick(time, (beat === 0 && !isWait) ? 'accent' : 'normal');
+            setTimeout(() => {
+                const dots = document.querySelectorAll('.metro-dot');
+                dots.forEach((d, i) => { 
+                    d.classList.remove('tick', 'accent'); 
+                    if(i === beat && !isWait) d.classList.add(beat === 0 ? 'accent' : 'tick'); 
+                });
+                if (!isWait && beat === 0 && cMeas === 0) highlight(cNoteIdx);
+            }, (time - audioCtx.currentTime) * 1000);
+        }
+
+        function generateRandomGrid() { const seq = [...NOTES_POOL].sort(() => Math.random() - 0.5); document.getElementById('note-grid').innerHTML = seq.map((n, i) => `<div class="note-box" id="nb-${i}">${n}</div>`).join(''); if(!isPlay) highlight(0); }
+        
+        function toggleRandomPlay() { 
+            isPlay = !isPlay; 
+            if (isPlay) { 
+                if(audioCtx.state === 'suspended') audioCtx.resume(); 
+                cBeat = 0; cMeas = 0; cNoteIdx = 0; waitBeats = 2;
+                nextTickTime = audioCtx.currentTime + 0.05; 
+                generateRandomGrid();
+                highlight(0);
+                document.getElementById('note-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                scheduler(); 
+                updateUI(true); 
+            } else { 
+                clearTimeout(timerID); 
+                updateUI(false); 
+                document.querySelectorAll('.note-box').forEach(e => e.classList.remove('active-note')); 
+            } 
+        }
+
+        function highlight(idx) { 
+            document.querySelectorAll('.note-box').forEach(e => e.classList.remove('active-note')); 
+            const el = document.getElementById(`nb-${idx}`); 
+            if(el) {
+                el.classList.add('active-note'); 
+                if (isPlay) {
+                    const rect = el.getBoundingClientRect();
+                    const isVisible = (
+                        rect.top >= 0 &&
+                        rect.left >= 0 &&
+                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                    );
+                    if (!isVisible) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        }
+        function updateUI(playing) {
+            const btn = document.getElementById('btn-play-random'), icon = document.getElementById('icon-play'), text = document.getElementById('text-play');
+            if (playing) { btn.classList.replace('bg-orange-600', 'bg-red-600'); text.innerText = "STOP"; icon.setAttribute('data-lucide', 'square'); }
+            else { btn.classList.replace('bg-red-600', 'bg-orange-600'); text.innerText = "START"; icon.setAttribute('data-lucide', 'play'); }
+            lucide.createIcons();
+        }
+        function updateMetroUI() { const p = parseInt(document.getElementById('metro-pulses').value) || 4; document.getElementById('metro-indicator').innerHTML = Array(p).fill(0).map(() => `<div class="metro-dot"></div>`).join(''); }
+
+        // DATOS PARA LA PESTAÑA DE DOMINANTES, FRIGIOS Y SUS
+        const DOM_TRIADS = [
+            { g: "Im", t: ["#9", "13"], s: "Mixolidia b9, #9, 13", c: "Mixo" },
+            { g: "bIIm", t: ["b9", "b13"], s: "Mixolidia b9, b13", c: "Mixo" },
+            { g: "II", t: ["9", "#11", "13"], s: "Mixolidia #11", c: "Mixo" },
+            { g: "bIIIm", t: ["#9", "#11"], s: "Mixolidia Alterada", c: "Mixo" },
+            { g: "bIII", t: ["b9", "#9", "b13"], s: "Mixolidia b9, #9, b13", c: "Mixo" },
+            { g: "#IVdim", t: ["#11"], s: "Mixolidia #11", c: "Mixo" },
+            { g: "#IVm", t: ["b9", "#11", "13"], s: "Locrio 6", c: "Mixo" },
+            { g: "bV", t: ["b9", "#11"], s: "Mixolidia Alterada", c: "Mixo" },
+            { g: "Vdim", t: ["b9"], s: "Mixolidia b9", c: "Mixo" },
+            { g: "Vm", t: ["9"], s: "Mixolidia", c: "Mixo" },
+            { g: "bVI", t: ["b9", "#9", "b13"], s: "Mixolidia b9, #9, b13", c: "Mixo" },
+            { g: "bVIaug", t: ["b13"], s: "Mixolidia b13", c: "Mixo" },
+            { g: "VIm", t: ["13"], s: "Mixolidia", c: "Mixo" },
+            { g: "VI", t: ["b9"], s: "Mixolidia b9", c: "Mixo" },
+
+            { g: "bII", t: ["b9", "11", "b13"], s: "Mixolidia b9, b13", c: "Frigio" },
+            { g: "bIIaug", t: ["b9", "11", "13"], s: "Mixolidia b9", c: "Frigio" },
+            { g: "bVIIm", t: ["b9", "11"], s: "Mixolidia b9", c: "Frigio" },
+
+            { g: "IIdim", t: ["9", "11", "b13"], s: "Mixolidia b13", c: "Sus" },
+            { g: "IIm", t: ["9", "11", "13"], s: "Mixolidia", c: "Sus" },
+            { g: "IVm", t: ["11", "b13"], s: "Mixolidia b13", c: "Sus" },
+            { g: "IV", t: ["11", "13"], s: "Mixolidia", c: "Sus" },
+            { g: "bVII", t: ["9", "11"], s: "Mixolidia", c: "Sus" }
+        ];
+
+        const DOM_TETRADS = [
+            { g: "Im7", t: ["#9"], s: "Mixolidia b9, #9, 13", c: "Mixo" },
+            { g: "bIIm(maj7)", t: ["b9"], s: "Mixolidia b9, b13", c: "Mixo" },
+            { g: "II7", t: ["9", "#11"], s: "Mixolidia #11", c: "Mixo" },
+            { g: "bIIIm7", t: ["b9", "#11"], s: "Mixolidia Alterada", c: "Mixo" },
+            { g: "bIIIm7(b5)", t: ["b9", "#9", "#11"], s: "Locrio 6", c: "Mixo" },
+            { g: "bIII7", t: ["#11"], s: "Mixolidia b9, #9, b13", c: "Mixo" },
+            { g: "#IVm7(b5)", t: ["#11"], s: "Mixolidia #11", c: "Mixo" },
+            { g: "#IV7", t: [], s: "Mixolidia Alterada", c: "Mixo" },
+            { g: "V°7", t: ["b9"], s: "Mixolidia b9", c: "Mixo" },
+            { g: "Vm(maj7)", t: [], s: "Mixolidia #11", c: "Mixo" },
+            { g: "bVImaj7", t: [], s: "Mixolidia b9, #9, b13", c: "Mixo" },
+            { g: "bVImaj7(#5)", t: [], s: "Mixolidia b13", c: "Mixo" },
+            { g: "VIm7", t: [], s: "Mixolidia", c: "Mixo" },
+            { g: "VI7", t: [], s: "Mixolidia b9", c: "Mixo" },
+
+            { g: "bIImaj7", t: ["11"], s: "Mixolidia b9, b13", c: "Frigio" },
+            { g: "bIImaj7(#5)", t: [], s: "Mixolidia b9", c: "Frigio" },
+            { g: "bVIIm(maj7)", t: ["11"], s: "Mixolidia b9", c: "Frigio" },
+
+            { g: "IIm7(b5)", t: [], s: "Mixolidia b13", c: "Sus" },
+            { g: "IIm7", t: [], s: "Mixolidia", c: "Sus" },
+            { g: "IVm(maj7)", t: [], s: "Mixolidia b13", c: "Sus" },
+            { g: "IVmaj7", t: [], s: "Mixolidia", c: "Sus" },
+            { g: "bVIImaj7", t: [], s: "Mixolidia", c: "Sus" }
+        ];
+
+        function showStructsSubTab(tab) {
+            const btnDiatonic = document.getElementById('stab-diatonic');
+            const btnDom = document.getElementById('stab-dom');
+            const btnFisica = document.getElementById('stab-fisica');
+            const btnAnalyzer = document.getElementById('stab-analyzer');
+            const contentDiatonic = document.getElementById('scontent-diatonic');
+            const contentDom = document.getElementById('scontent-dom');
+            const contentFisica = document.getElementById('scontent-fisica');
+            const contentAnalyzer = document.getElementById('scontent-analyzer');
+
+            const inactiveBtnClass = "px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors";
+            const activeBtnClass = "px-3 py-2 text-[10px] md:text-xs font-black uppercase rounded-lg bg-blue-600 text-white transition-colors shadow-sm";
+
+            btnDiatonic.className = inactiveBtnClass;
+            btnDom.className = inactiveBtnClass;
+            btnFisica.className = inactiveBtnClass;
+            btnAnalyzer.className = inactiveBtnClass;
+
+            contentDiatonic.classList.replace('block', 'hidden');
+            contentDom.classList.replace('block', 'hidden');
+            contentFisica.classList.replace('block', 'hidden');
+            contentAnalyzer.classList.replace('block', 'hidden');
+
+            if (tab === 'diatonic') {
+                btnDiatonic.className = activeBtnClass;
+                contentDiatonic.classList.replace('hidden', 'block');
+            } else if (tab === 'dom') {
+                btnDom.className = activeBtnClass;
+                contentDom.classList.replace('hidden', 'block');
+                renderDomStructs();
+            } else if (tab === 'fisica') {
+                btnFisica.className = activeBtnClass;
+                contentFisica.classList.replace('hidden', 'block');
+            } else if (tab === 'analyzer') {
+                btnAnalyzer.className = activeBtnClass;
+                contentAnalyzer.classList.replace('hidden', 'block');
+            }
+        }
+
+        function initStructs() {
+            const rootSelector = document.getElementById('structs-root');
+            const domSelector = document.getElementById('dom-root');
+            const optionsHtml = NOTES_POOL.map((note, index) => `<option value="${index}">${note}</option>`).join('');
+            
+            rootSelector.innerHTML = optionsHtml;
+            rootSelector.value = 0; // Por defecto C
+            
+            domSelector.innerHTML = optionsHtml;
+            domSelector.value = 0; // Por defecto C
+
+            renderStructs();
+            renderDomStructs();
+        }
+
+        function renderStructs() {
+            const rootIdx = parseInt(document.getElementById('structs-root').value);
+            const majScaleInt = [0, 2, 4, 5, 7, 9, 11];
+            const n = majScaleInt.map(interval => NOTES_POOL[(rootIdx + interval) % 12]);
+            const degrees = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+            const triadNames = [n[0], n[1]+'m', n[2]+'m', n[3], n[4], n[5]+'m', n[6]+'°'];
+            
+            const MATRIX = [
+                [n[0], n[1]+"m11(omit3)", n[0]+"/"+n[2], n[3]+"maj9(omit3)", n[0]+"/"+n[4], n[5]+"m7", "N.A"],
+                [n[0]+"6/9(sus4)", n[1]+"m", "N.A", n[3]+"6", n[4]+"7(Sus2)", n[1]+"m/"+n[5], n[6]+"m7(b5)"],
+                [n[0]+"maj7", "N.A", n[2]+"m", n[3]+"maj7(#11)(omit3)", n[4]+"6", n[5]+"m9(omit3)", n[2]+"m/"+n[6]],
+                [n[3]+"/"+n[0], n[1]+"m7", "N.A", n[3], n[4]+"9(Sus4)", n[3]+"/"+n[5], "N.A"],
+                [n[0]+"maj9(omit3)", n[4]+"/"+n[1], n[2]+"m7", n[3]+"6/9(#11)(omit3)", n[4], n[5]+"m11(omit3)", n[4]+"/"+n[6]],
+                [n[0]+"6", n[1]+"m9(omit3)", n[5]+"m/"+n[2], n[3]+"maj7", n[4]+"6/9(Sus4)", n[5]+"m", "N.A"],
+                ["N.A", "N.A", "N.A", n[6]+"°/"+n[3], n[4]+"7", "N.A", n[6]+"°"]
+            ];
+            
+            let html = '<div class="overflow-x-auto"><table class="w-full text-center border-collapse border-2 border-slate-300 bg-white min-w-[700px] font-sans shadow-sm">';
+            html += '<thead><tr>';
+            html += '<th rowspan="2" class="border border-slate-300 bg-slate-200 p-2 font-bold text-slate-800 w-32 text-xs align-middle uppercase tracking-wider">Tríadas</th>';
+            html += '<th colspan="7" class="border border-slate-300 bg-slate-300 p-2 font-black text-slate-900 text-sm uppercase tracking-widest">Grados (Bajo)</th>';
+            html += '</tr><tr>';
+            degrees.forEach((deg, i) => {
+                html += '<th class="border border-slate-300 bg-slate-200 p-2 w-24"><div class="text-sm font-black text-slate-800">' + n[i] + '</div><div class="text-xs text-slate-500 font-bold">' + deg + '</div></th>';
+            });
+            html += '</tr></thead><tbody class="text-sm">';
+            
+            MATRIX.forEach((row, i) => {
+                let rowHtml = '<tr class="hover:bg-blue-50/30 transition-colors">';
+                rowHtml += '<td class="border border-slate-300 bg-slate-100 p-2"><div class="text-sm font-black text-slate-800">' + triadNames[i] + '</div><div class="text-xs text-slate-500 font-bold">' + degrees[i] + '</div></td>';
+                
+                row.forEach((cell) => {
+                    if (cell === 'N.A') {
+                        rowHtml += '<td class="border border-slate-300 p-2 bg-slate-50 align-middle text-center"><span class="text-slate-300 font-black text-[11px] tracking-widest">N.A</span></td>';
+                    } else {
+                        rowHtml += '<td class="border border-slate-300 p-2 font-black text-blue-700 text-sm">' + cell + '</td>';
+                    }
+                });
+                rowHtml += '</tr>';
+                html += rowHtml;
+            });
+            
+            html += '</tbody></table></div>';
+            document.getElementById('structs-grid').innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // MOTOR DE ENARMONÍA PARA EL DESARROLLO DE ACORDES Y EL ANALIZADOR
+        function getScaleDegreeName(rootName, degreeStr) {
+            const baseNotes = ['C','D','E','F','G','A','B'];
+            let rootLetter = rootName.charAt(0);
+            let rootAcc = rootName.length > 1 ? rootName.substring(1) : '';
+            let rootBaseIndex = baseNotes.indexOf(rootLetter);
+
+            let degreeNum = parseInt(degreeStr.replace(/[^0-9]/g, '')) - 1; 
+            let targetBaseIndex = (rootBaseIndex + degreeNum) % 7;
+            let targetLetter = baseNotes[targetBaseIndex];
+
+            const majorScale = [0, 2, 4, 5, 7, 9, 11];
+            let expectedSemitones = majorScale[degreeNum % 7]; 
+            if (degreeStr.includes('b')) expectedSemitones -= 1;
+            if (degreeStr.includes('#')) expectedSemitones += 1;
+
+            let rootChroma = [0, 2, 4, 5, 7, 9, 11][rootBaseIndex];
+            if (rootAcc === 'b') rootChroma -= 1;
+            if (rootAcc === 'bb') rootChroma -= 2;
+            if (rootAcc === '#') rootChroma += 1;
+            if (rootAcc === 'x') rootChroma += 2;
+
+            let targetChroma = (rootChroma + expectedSemitones + 12) % 12;
+            let baseTargetChroma = [0, 2, 4, 5, 7, 9, 11][targetBaseIndex];
+            
+            let diff = targetChroma - baseTargetChroma;
+            if (diff > 6) diff -= 12;
+            if (diff < -6) diff += 12;
+
+            let acc = '';
+            if (diff === -1) acc = 'b';
+            else if (diff === -2) acc = 'bb';
+            else if (diff === 1) acc = '#';
+            else if (diff === 2) acc = 'x';
+
+            return targetLetter + acc;
+        }
+
+        function getUpperStructureChord(romanStr, rootIndex) {
+            const match = romanStr.trim().match(/^([b#]?[IV]+)\s*(.*)$/);
+            if (!match) return romanStr;
+            const roman = match[1];
+            const quality = match[2];
+            const romanMap = {
+                'I': '1', 'bII': 'b2', 'II': '2', 'bIII': 'b3', 'III': '3',
+                'IV': '4', '#IV': '#4', 'bV': 'b5', 'V': '5', 'bVI': 'b6',
+                'VI': '6', 'bVII': 'b7', 'VII': '7'
+            };
+            const interval = romanMap[roman];
+            if (interval === undefined) return romanStr;
+            const rootName = NOTES_POOL[rootIndex];
+            const note = getScaleDegreeName(rootName, interval);
+            return note + quality;
+        }
+
+        function renderDomStructs() {
+            const rootSelector = document.getElementById('dom-root');
+            const rootIdx = rootSelector ? parseInt(rootSelector.value) : 0;
+            const rootNote = NOTES_POOL[rootIdx];
+
+            const tableSelect = document.getElementById('dom-table-select');
+            const tableType = tableSelect ? tableSelect.value : 'mixo_tri';
+
+            const container = document.getElementById('dom-tables-container');
+            let html = '';
+
+            const renderTable = (data, title, note = '') => {
+                let tHtml = '<div class="overflow-x-auto bg-white p-4 rounded-xl border border-slate-200 shadow-sm">';
+                tHtml += '<h4 class="text-base md:text-lg font-black text-slate-800 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">' + title + note + '</h4>';
+                tHtml += '<table class="w-full text-center border-collapse min-w-full">';
+                tHtml += '<thead><tr>';
+                tHtml += '<th class="bg-blue-50 text-blue-800 border-b border-slate-200 p-2 text-[10px] md:text-xs font-bold w-20 md:w-28">Estructura</th>';
+                ['b9', '9', '#9', '11', '#11', 'b13', '13'].forEach(h => {
+                    tHtml += '<th class="bg-slate-50 text-slate-600 border-b border-slate-200 p-1 md:p-2 text-[10px] md:text-xs font-bold">' + h + '</th>';
+                });
+                tHtml += '<th class="bg-blue-50 text-blue-800 border-b border-slate-200 p-2 text-[10px] md:text-xs font-bold text-left">Escala a usar</th>';
+                tHtml += '</tr></thead><tbody class="text-xs md:text-sm">';
+                
+                data.forEach(row => {
+                    const upperChord = getUpperStructureChord(row.g, rootIdx);
+
+                    tHtml += '<tr class="hover:bg-slate-50 border-b border-slate-100">';
+                    
+                    // Renderización de la Estructura (Triada superior / Shell Voicing dominante inferior)
+                    tHtml += '<td class="p-2 align-middle">';
+                    tHtml += '<div class="inline-flex flex-col items-center justify-center">';
+                    tHtml += `<span class="text-sm md:text-base font-black text-blue-700 leading-none border-b-2 border-slate-300 pb-1 w-full text-center">${upperChord}</span>`;
+                    tHtml += `<span class="text-xs md:text-sm font-black text-slate-700 leading-none pt-1 w-full text-center">${rootNote}7</span>`;
+                    tHtml += '</div>';
+                    tHtml += `<div class="text-[9px] md:text-[10px] text-slate-500 font-bold mt-1.5 tracking-widest">(${row.g})</div>`;
+                    tHtml += '</td>';
+                    
+                    ['b9', '9', '#9', '11', '#11', 'b13', '13'].forEach(h => {
+                        const hasTension = row.t.includes(h);
+                        const mark = hasTension 
+                            ? '<i data-lucide="check" class="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mx-auto"></i>' 
+                            : '<span class="text-slate-200 font-bold">-</span>';
+                        tHtml += '<td class="p-1 md:p-2">' + mark + '</td>';
+                    });
+
+                    tHtml += '<td class="p-2 font-medium text-slate-600 text-left leading-tight">' + rootNote + ' ' + row.s + '</td>';
+                    tHtml += '</tr>';
+                });
+                
+                tHtml += '</tbody></table></div>';
+                return tHtml;
+            };
+
+            if (tableType === 'mixo_tri') {
+                html = renderTable(DOM_TRIADS.filter(d => d.c === 'Mixo'), '1. Acordes Mixolidios (Tríadas)');
+            } else if (tableType === 'frigio_tri') {
+                html = renderTable(DOM_TRIADS.filter(d => d.c === 'Frigio'), '2. Acordes Frigios Sus. (Tríadas)', ' <span class="text-[10px] text-slate-400 normal-case tracking-normal font-normal ml-2">* Permutar b13/13 por la 5 para sonoridad más frigia</span>');
+            } else if (tableType === 'sus_tri') {
+                html = renderTable(DOM_TRIADS.filter(d => d.c === 'Sus'), '3. Acordes Sus (Tríadas)');
+            } else if (tableType === 'mixo_tet') {
+                html = renderTable(DOM_TETRADS.filter(d => d.c === 'Mixo'), '4. Acordes Mixolidios (Tétradas)');
+            } else if (tableType === 'frigio_tet') {
+                html = renderTable(DOM_TETRADS.filter(d => d.c === 'Frigio'), '5. Acordes Frigios Sus. (Tétradas)');
+            } else if (tableType === 'sus_tet') {
+                html = renderTable(DOM_TETRADS.filter(d => d.c === 'Sus'), '6. Acordes Sus (Tétradas)');
+            }
+
+            container.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        const INTERVAL_NAMES = {
+            1: "Unísono", 2: "2da", 3: "3ra", 4: "4ta", 5: "5ta", 6: "6ta", 7: "7ma", 8: "8va",
+            9: "9na (2da)", 10: "10ª (3ra)", 11: "11ª (4ta)", 12: "12ª (5ta)", 13: "13ª (6ta)", 14: "14ª (7ma)", 15: "15ª (8va)"
+        };
+
+        function getIntervalType(num) {
+            if ([1, 5, 8, 12, 15].includes(num)) return { name: "Cons. Perfecta", color: "text-blue-700 bg-blue-100 border-blue-300" };
+            if ([3, 6, 10, 13].includes(num)) return { name: "Cons. Imperfecta", color: "text-emerald-700 bg-emerald-100 border-emerald-300" };
+            return { name: "Disonancia", color: "text-red-700 bg-red-100 border-red-300" };
+        }
+
+        function getUsageRecommendation(num1, num2) {
+            const t1 = getIntervalType(num1).name;
+            const t2 = getIntervalType(num2).name;
+            
+            if (t1 === "Disonancia" || t2 === "Disonancia") {
+                return { text: "Uso preparado / Resuelto", color: "text-red-800 bg-red-100 border-red-300" };
+            }
+            if (t1 === "Cons. Perfecta" || t2 === "Cons. Perfecta") {
+                return { text: "Intervalos de uso Moderado", color: "text-amber-800 bg-amber-100 border-amber-300" };
+            }
+            return { text: "Intervalos de mayor uso", color: "text-emerald-800 bg-emerald-100 border-emerald-300" };
+        }
+
+        function initTrocado() {
+            const select = document.getElementById('trocado-select');
+            [8, 9, 10, 11, 12, 13, 14, 15].forEach(i => {
+                select.innerHTML += `<option value="${i}">Trocado a la ${INTERVAL_NAMES[i]}</option>`;
+            });
+            renderTrocado();
+        }
+
+        function renderTrocado() {
+            const t = parseInt(document.getElementById('trocado-select').value);
+            let html = '<div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm"><table class="w-full text-center border-collapse min-w-[600px]">';
+            html += '<thead><tr>';
+            html += '<th class="bg-slate-100 border-b border-slate-200 p-3 text-xs font-black text-slate-700 w-1/3">Intervalo Original</th>';
+            html += '<th class="bg-slate-100 border-b border-slate-200 p-3 text-xs font-black text-slate-700 w-1/3">Se invierte a (Trocado)</th>';
+            html += '<th class="bg-slate-100 border-b border-slate-200 p-3 text-xs font-black text-slate-700 w-1/3">Recomendación de Uso</th>';
+            html += '</tr></thead><tbody class="text-sm">';
+            
+            for (let i = 1; i <= t; i++) {
+                let inv = t - i + 1;
+                let typeI = getIntervalType(i);
+                let typeInv = getIntervalType(inv);
+                let usage = getUsageRecommendation(i, inv);
+                
+                html += `<tr class="hover:bg-slate-50 border-b border-slate-100 last:border-0">`;
+                html += `<td class="p-3 align-middle border-r border-slate-100">
+                            <div class="font-black text-slate-800 text-lg">${INTERVAL_NAMES[i]}</div>
+                            <div class="text-[9px] uppercase font-bold mt-1 inline-block px-2 py-0.5 rounded border ${typeI.color}">${typeI.name}</div>
+                         </td>`;
+                html += `<td class="p-3 align-middle border-r border-slate-100">
+                            <div class="font-black text-blue-700 text-lg">${INTERVAL_NAMES[inv]}</div>
+                            <div class="text-[9px] uppercase font-bold mt-1 inline-block px-2 py-0.5 rounded border ${typeInv.color}">${typeInv.name}</div>
+                         </td>`;
+                html += `<td class="p-3 align-middle">
+                            <div class="text-[10px] md:text-xs uppercase font-black px-3 py-2 rounded-lg border inline-block w-full max-w-[220px] ${usage.color}">${usage.text}</div>
+                         </td>`;
+                html += `</tr>`;
+            }
+            
+            html += '</tbody></table></div>';
+            document.getElementById('trocado-table-container').innerHTML = html;
+        }
+
+        // DEV_SCHEMAS MAPS
+        const DEV_SCHEMAS = {
+            "JÓNICO": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["Imaj7", "IIm7", "#IIm6", "Imaj7/3"],
+                    "DE_1RA_INV_A_2DA_INV": ["Imaj7/3", "IIm7/b3", "#IIm6/b3", "Imaj7/5"],
+                    "DE_2DA_INV_A_3RA_INV": ["Imaj7/5", "IIm7/5", "#IIm6/5", "Imaj7/7"],
+                    "DE_3RA_INV_A_FUN": ["Imaj7/7", "IIm7/b7", "#IIm6/6", "Imaj7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["Imaj7", "Imaj7/7", "VIm7", "Imaj7/5"],
+                    "DE_2DA_INV_A_FUN": ["IVmaj7", "IIIm7", "IIm7", "Imaj7"]
+                }
+            },
+            "DÓRICO": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["Im7", "IIm7", "Im7/b3", "IIm7"],
+                    "DE_1RA_INV_A_2DA_INV": ["Im7/b3", "IIm7/b3", "Im7/5", "IIm7/b3"],
+                    "DE_2DA_INV_A_3RA_INV": ["Im7/5", "IIm7/5", "Im7/b7", "IIm7/5"],
+                    "DE_3RA_INV_A_FUN": ["Im7/b7", "IIm7/b7", "Im7", "IIm7/b7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["Im7", "Im7/b7", "VIm7(b5)", "Im7/5"],
+                    "DE_2DA_INV_A_FUN": ["IV7", "bIIImaj7", "IIm7", "Im7"]
+                }
+            },
+            "FRIGIO": {
+                 "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["Im7", "bIImaj7", "Im7/b3", "bIImaj7"],
+                    "DE_1RA_INV_A_2DA_INV": ["Im7/b3", "bIImaj7/3", "Im7/5", "bIImaj7/3"],
+                    "DE_2DA_INV_A_3RA_INV": ["Im7/5", "bIImaj7/5", "Im7/b7", "bIImaj7/5"],
+                    "DE_3RA_INV_A_FUN": ["Im7/b7", "bIImaj7/7", "Im7", "bIImaj7/7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["Im7", "Im7/b7", "bVImaj7", "Im7/5"],
+                    "DE_2DA_INV_A_FUN": ["IVm7", "bIII7", "bIImaj7", "Im7"]
+                }
+            },
+            "LIDIO": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["Imaj7", "II7", "#IIm6", "Imaj7/3"],
+                    "DE_1RA_INV_A_2DA_INV": ["Imaj7/3", "II7/3", "#IIm6/b3", "Imaj7/5"],
+                    "DE_2DA_INV_A_3RA_INV": ["Imaj7/5", "II7/5", "#IIm6/5", "Imaj7/7"],
+                    "DE_3RA_INV_A_FUN": ["Imaj7/7", "II7/b7", "#IIm6/6", "Imaj7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["Imaj7", "Imaj7/7", "VIm7", "Imaj7/5"],
+                    "DE_2DA_INV_A_FUN": ["#IVm7(b5)", "IIIm7", "II7", "Imaj7"]
+                }
+            },
+            "MIXOLIDIO": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["I7", "IIm7", "#II°7", "I7/3"],
+                    "DE_1RA_INV_A_2DA_INV": ["I7/3", "IIm7/b3", "#IV°7", "I7/5"],
+                    "DE_2DA_INV_A_3RA_INV": ["I7/5", "IIm7/5", "VI°7", "I7/b7"],
+                    "DE_3RA_INV_A_FUN": ["I7/b7", "IIm7/b7", "I°7", "I7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["I7", "I7/b7", "VIm7(b5)", "I7/5"],
+                    "DE_2DA_INV_A_FUN": ["IVmaj7", "IIIm7(b5)", "IIm7", "I7"]
+                }
+            },
+            "EÓLICO": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["Im7", "IIm7(b5)", "Im7/b3", "IIm7(b5)"],
+                    "DE_1RA_INV_A_2DA_INV": ["Im7/b3", "IIm7(b5)/b3", "Im7/5", "IIm7(b5)/b3"],
+                    "DE_2DA_INV_A_3RA_INV": ["Im7/5", "IIm7(b5)/b5", "Im7/b7", "IIm7(b5)/b5"],
+                    "DE_3RA_INV_A_FUN": ["Im7/b7", "IIm7(b5)/b7", "Im7", "IIm7(b5)/b7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["Im7", "Im7/b7", "bVImaj7", "Im7/5"],
+                    "DE_2DA_INV_A_FUN": ["IVm7", "bIIImaj7", "IIm7(b5)", "Im7"]
+                }
+            },
+            "LOCRIO": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["Im7(b5)", "bIImaj7", "Im7(b5)/b3", "bIImaj7"],
+                    "DE_1RA_INV_A_2DA_INV": ["Im7(b5)/b3", "bIImaj7/3", "Im7(b5)/b5", "bIImaj7/3"],
+                    "DE_2DA_INV_A_3RA_INV": ["Im7(b5)/b5", "bIImaj7/5", "Im7(b5)/b7", "bIImaj7/5"],
+                    "DE_3RA_INV_A_FUN": ["Im7(b5)/b7", "bIImaj7/7", "Im7(b5)", "bIImaj7/7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["Im7(b5)", "Im7(b5)/b7", "bVI7", "Im7(b5)/b5"],
+                    "DE_2DA_INV_A_FUN": ["IVm7", "bIIIm7", "bIImaj7", "Im7(b5)"]
+                }
+            },
+            "MIXOLIDIO_#4": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["I7", "II7", "#II°7", "I7/3"],
+                    "DE_1RA_INV_A_2DA_INV": ["I7/3", "II7/3", "#IV°7", "I7/5"],
+                    "DE_2DA_INV_A_3RA_INV": ["I7/5", "II7/5", "VI°7", "I7/b7"],
+                    "DE_3RA_INV_A_FUN": ["I7/b7", "II7/b7", "I°7", "I7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["I7", "I7/b7", "VIm7(b5)", "I7/5"],
+                    "DE_2DA_INV_A_FUN": ["#IVm7(b5)", "IIIm7(b5)", "II7", "I7"]
+                }
+            },
+            "MIXOLIDIO_B2B6": {
+                 "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["I7", "bIImaj7", "I7/3", "bIImaj7"],
+                    "DE_1RA_INV_A_2DA_INV": ["I7/3", "bIImaj7/3", "I7/5", "bIImaj7/3"],
+                    "DE_2DA_INV_A_3RA_INV": ["I7/5", "bIImaj7/5", "I7/b7", "bIImaj7/5"],
+                    "DE_3RA_INV_A_FUN": ["I7/b7", "bIImaj7/7", "I7", "bIImaj7/7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["I7", "I7/b7", "bVImaj7(#5)", "I7/5"],
+                    "DE_2DA_INV_A_FUN": ["IVm(maj7)", "III°7", "bIImaj7", "I7"]
+                }
+            },
+            "DÓRICO_BECUADRO_7": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["Im(maj7)", "IIm7", "Im(maj7)/b3", "IIm7"],
+                    "DE_1RA_INV_A_2DA_INV": ["Im(maj7)/b3", "IIm7/b3", "Im(maj7)/5", "IIm7/b3"],
+                    "DE_2DA_INV_A_3RA_INV": ["Im(maj7)/5", "IIm7/5", "Im(maj7)/7", "IIm7/5"],
+                    "DE_3RA_INV_A_FUN": ["Im(maj7)/7", "IIm7/b7", "Im(maj7)", "IIm7/b7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["Im(maj7)", "Im(maj7)/7", "VIm7(b5)", "Im(maj7)/5"],
+                    "DE_2DA_INV_A_FUN": ["IV7", "bIIImaj7(#5)", "IIm7", "Im(maj7)"]
+                }
+            },
+            "EÓLICO_BECUADRO_7": {
+                "ASCENDENTE": {
+                    "FUN_A_1RA_INV": ["Im(maj7)", "IIm7(b5)", "Im(maj7)/b3", "IIm7(b5)"],
+                    "DE_1RA_INV_A_2DA_INV": ["Im(maj7)/b3", "IIm7(b5)/b3", "Im(maj7)/5", "IIm7(b5)/b3"],
+                    "DE_2DA_INV_A_3RA_INV": ["Im(maj7)/5", "IIm7(b5)/b5", "Im(maj7)/7", "IIm7(b5)/b5"],
+                    "DE_3RA_INV_A_FUN": ["Im(maj7)/7", "IIm7(b5)/b7", "Im(maj7)", "IIm7(b5)/b7"]
+                },
+                "DESCENDENTE": {
+                    "FUN_A_2DA_INV": ["Im(maj7)", "Im(maj7)/7", "bVImaj7", "Im(maj7)/5"],
+                    "DE_2DA_INV_A_FUN": ["IVm7", "bIIImaj7(#5)", "IIm7(b5)", "Im(maj7)"]
+                }
+            }
+        };
+
+        function parseDevelopmentChord(romanStr, rootIndex) {
+            if(!romanStr) return "";
+            let parts = romanStr.split('/');
+            let mainPart = parts[0];
+            let bassPart = parts[1]; 
+
+            let match = mainPart.match(/^([b#♮]?[IV]+)(.*)$/);
+            if (!match) return romanStr;
+
+            let roman = match[1];
+            let quality = match[2];
+
+            let romanToDegree = {
+                'I': '1', 'bII': 'b2', '#I': '#1', 'II': '2', 'bIII': 'b3', '#II': '#2', 'III': '3',
+                'IV': '4', '#IV': '#4', 'bV': 'b5', 'V': '5', 'bVI': 'b6', '#V': '#5',
+                'VI': '6', 'bVII': 'b7', '#VI': '#6', 'VII': '7'
+            };
+
+            let chordDegreeStr = romanToDegree[roman];
+            if (!chordDegreeStr) return romanStr;
+
+            let keyRootName = NOTES_POOL[rootIndex];
+            let chordRootNote = getScaleDegreeName(keyRootName, chordDegreeStr);
+            
+            let chordName = chordRootNote + quality;
+
+            if (bassPart) {
+                if (/[0-9]/.test(bassPart)) {
+                    let bassNote = getScaleDegreeName(chordRootNote, bassPart);
+                    chordName += '/' + bassNote;
+                } else {
+                    chordName += '/' + bassPart; 
+                }
+            }
+
+            return chordName;
+        }
+
+        function initDesarrollo() {
+            const rootSel = document.getElementById('dev-root');
+            rootSel.innerHTML = NOTES_POOL.map((n, i) => `<option value="${i}">${n}</option>`).join('');
+            rootSel.value = 0;
+            updateTramos();
+            renderDesarrollo();
+        }
+
+        function updateTramos() {
+            const dir = document.getElementById('dev-dir').value;
+            const tramoSel = document.getElementById('dev-tramo');
+            
+            let arr = [];
+
+            if (dir === "ASCENDENTE") {
+                arr = [
+                    {v: "FUN_A_1RA_INV", t: "Fund. a 1ra Inv."},
+                    {v: "DE_1RA_INV_A_2DA_INV", t: "1ra Inv. a 2da Inv."},
+                    {v: "DE_2DA_INV_A_3RA_INV", t: "2da Inv. a 3ra Inv."},
+                    {v: "DE_3RA_INV_A_FUN", t: "3ra Inv. a Fund."}
+                ];
+            } else {
+                arr = [
+                    {v: "FUN_A_2DA_INV", t: "Fund. a 2da Inv."},
+                    {v: "DE_2DA_INV_A_FUN", t: "2da Inv. a Fund."}
+                ];
+            }
+            
+            tramoSel.innerHTML = arr.map(i => `<option value="${i.v}">${i.t}</option>`).join('');
+            if (arr.length > 0) tramoSel.value = arr[0].v;
+        }
+
+        function renderDesarrollo() {
+            const rootIdx = parseInt(document.getElementById('dev-root').value);
+            const scale = document.getElementById('dev-scale').value;
+            const dir = document.getElementById('dev-dir').value;
+            const tramo = document.getElementById('dev-tramo').value;
+
+            const progression = DEV_SCHEMAS[scale]?.[dir]?.[tramo] || [];
+            
+            let html = '';
+            if(progression.length === 0) {
+                html = '<div class="text-sm font-bold text-slate-400 italic p-4">Esquema de desarrollo no disponible para esta selección.</div>';
+            } else {
+                html = progression.map((roman, idx) => {
+                    const chord = parseDevelopmentChord(roman, rootIdx);
+                    let block = `
+                        <div class="flex flex-col items-center bg-white border border-slate-200 p-5 rounded-2xl shadow-sm min-w-[120px]">
+                            <span class="text-3xl font-black text-blue-700">${chord}</span>
+                            <span class="text-[10px] font-bold text-slate-400 mt-2 tracking-widest">${roman}</span>
+                        </div>
+                    `;
+                    if(idx < progression.length - 1) {
+                        block += `<i data-lucide="arrow-right" class="w-6 h-6 text-slate-300 hidden md:block"></i><i data-lucide="arrow-down" class="w-6 h-6 text-slate-300 block md:hidden my-2"></i>`;
+                    }
+                    return block;
+                }).join('');
+            }
+
+            document.getElementById('dev-res').innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+            document.getElementById(id).classList.add('active'); document.querySelector(`[data-tab="${id}"]`).classList.add('active-tab'); lucide.createIcons();
+        }
+
+        function openModal() {
+            const modal = document.getElementById('modal-notas');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-notas');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // --- LÓGICA DEL ANALIZADOR SUPERESTRUCTURAL ---
+        let analyzerState = {
+            rootName: 'C',
+            type: 'maj',
+            activeFamily: 'Todos',
+            showIncompatible: false,
+            bassPreferences: {
+                0: 'C', 1: 'Db', 2: 'D', 3: 'Eb', 4: 'E', 5: 'F', 
+                6: 'Gb', 7: 'G', 8: 'Ab', 9: 'A', 10: 'Bb', 11: 'B'
+            }
+        };
+
+        const ALL_NOTE_NAMES = [
+            { name: 'C', chroma: 0, letter: 0 }, { name: 'C#', chroma: 1, letter: 0 },
+            { name: 'Db', chroma: 1, letter: 1 }, { name: 'D', chroma: 2, letter: 1 },
+            { name: 'D#', chroma: 3, letter: 1 }, { name: 'Eb', chroma: 3, letter: 2 },
+            { name: 'E', chroma: 4, letter: 2 }, { name: 'F', chroma: 5, letter: 3 },
+            { name: 'F#', chroma: 6, letter: 3 }, { name: 'Gb', chroma: 6, letter: 4 },
+            { name: 'G', chroma: 7, letter: 4 }, { name: 'G#', chroma: 8, letter: 4 },
+            { name: 'Ab', chroma: 8, letter: 5 }, { name: 'A', chroma: 9, letter: 5 },
+            { name: 'A#', chroma: 10, letter: 5 }, { name: 'Bb', chroma: 10, letter: 6 },
+            { name: 'B', chroma: 11, letter: 6 }
+        ];
+
+        const ENHARMONIC_PAIRS = {
+            0: ['C'], 1: ['Db', 'C#'], 2: ['D'], 3: ['Eb', 'D#'], 4: ['E'],
+            5: ['F'], 6: ['Gb', 'F#'], 7: ['G'], 8: ['Ab', 'G#'], 9: ['A'],
+            10: ['Bb', 'A#'], 11: ['B']
+        };
+
+        const INTERVAL_MAP = {
+            "0-0": "1", "0-1": "#1", 
+            "1-1": "b2", "1-2": "2", "1-3": "#2",
+            "2-3": "b3", "2-4": "3", "2-5": "#3",
+            "3-4": "b4", "3-5": "4", "3-6": "#4",
+            "4-6": "b5", "4-7": "5", "4-8": "#5",
+            "5-8": "b6", "5-9": "6", "5-10": "#6",
+            "6-9": "bb7", "6-10": "b7", "6-11": "7"
+        };
+
+        const SCALES_DB = [
+            { name: "Jónico", intervals: ["1", "2", "3", "4", "5", "6", "7"] },
+            { name: "Dórico", intervals: ["1", "2", "b3", "4", "5", "6", "b7"] },
+            { name: "Frigio", intervals: ["1", "b2", "b3", "4", "5", "b6", "b7"] },
+            { name: "Lidio", intervals: ["1", "2", "3", "#4", "5", "6", "7"] },
+            { name: "Mixolidio", intervals: ["1", "2", "3", "4", "5", "6", "b7"] },
+            { name: "Eólico", intervals: ["1", "2", "b3", "4", "5", "b6", "b7"] },
+            { name: "Locrio", intervals: ["1", "b2", "b3", "4", "b5", "b6", "b7"] },
+            { name: "Eólico ♮7", intervals: ["1", "2", "b3", "4", "5", "b6", "7"] },
+            { name: "Locrio ♮6", intervals: ["1", "b2", "b3", "4", "b5", "6", "b7"] },
+            { name: "Jónico #5", intervals: ["1", "2", "3", "4", "#5", "6", "7"] },
+            { name: "Dórico #4", intervals: ["1", "2", "b3", "#4", "5", "6", "b7"] },
+            { name: "Mixolidio b2 b6", intervals: ["1", "b2", "3", "4", "5", "b6", "b7"] },
+            { name: "Lidio #2", intervals: ["1", "#2", "3", "#4", "5", "6", "7"] },
+            { name: "Locrio b4 bb7", intervals: ["1", "b2", "b3", "b4", "b5", "b6", "bb7"] },
+            { name: "Dórico ♮7", intervals: ["1", "2", "b3", "4", "5", "6", "7"] },
+            { name: "Frigio ♮6", intervals: ["1", "b2", "b3", "4", "5", "6", "b7"] },
+            { name: "Lidio #5", intervals: ["1", "2", "3", "#4", "#5", "6", "7"] },
+            { name: "Mixolidio #4", intervals: ["1", "2", "3", "#4", "5", "6", "b7"] },
+            { name: "Mixolidio b6", intervals: ["1", "2", "3", "4", "5", "b6", "b7"] },
+            { name: "Locrio ♮2", intervals: ["1", "2", "b3", "4", "b5", "b6", "b7"] },
+            { name: "Mixolidio Alterado", intervals: ["1", "b2", "#2", "3", "b5", "b6", "b7"] },
+            { name: "Jónico b6", intervals: ["1", "2", "3", "4", "5", "b6", "7"] },
+            { name: "Locrio ♮2 ♮6", intervals: ["1", "2", "b3", "4", "b5", "6", "b7"] },
+            { name: "Mixolidio b2 #2 b6", intervals: ["1", "b2", "#2", "3", "5", "b6", "b7"] },
+            { name: "Dórico #4 ♮7", intervals: ["1", "2", "b3", "#4", "5", "6", "7"] },
+            { name: "Mixolidio b2", intervals: ["1", "b2", "3", "4", "5", "6", "b7"] },
+            { name: "Lidio #2 #5", intervals: ["1", "#2", "3", "#4", "#5", "6", "7"] },
+            { name: "Locrio bb7", intervals: ["1", "b2", "b3", "4", "b5", "b6", "bb7"] }
+        ];
+
+        const TYPE_LABELS = {
+            'maj': '', 'min': 'm', 'aug': '(#5)', 'maj7': 'maj7', 'm7': 'm7', 
+            'm_maj7': 'm(maj7)', 'maj7_aug': 'maj7(#5)', 'qA': 'Cuartas A', 'qB': 'Cuartas B', 'qC': 'Cuartas C'
+        };
+
+        const MODE_FAMILIES = ["Todos", "Jónico", "Dórico", "Frigio", "Lidio", "Mixolidio", "Eólico", "Locrio"];
+
+        function getStructureNotes(rootObj, t) {
+            const getRel = (semi, letOff) => {
+                const targetChroma = (rootObj.chroma + semi) % 12;
+                const targetLetIdx = (rootObj.letter + letOff) % 7;
+                return ALL_NOTE_NAMES.find(n => n.chroma === targetChroma && n.letter === targetLetIdx) || 
+                       ALL_NOTE_NAMES.find(n => n.chroma === targetChroma);
+            };
+
+            switch(t) {
+                case 'maj': return [rootObj, getRel(4, 2), getRel(7, 4)];
+                case 'min': return [rootObj, getRel(3, 2), getRel(7, 4)];
+                case 'aug': return [rootObj, getRel(4, 2), getRel(8, 4)];
+                case 'maj7': return [rootObj, getRel(4, 2), getRel(7, 4), getRel(11, 6)];
+                case 'm7': return [rootObj, getRel(3, 2), getRel(7, 4), getRel(10, 6)];
+                case 'm_maj7': return [rootObj, getRel(3, 2), getRel(7, 4), getRel(11, 6)];
+                case 'maj7_aug': return [rootObj, getRel(4, 2), getRel(8, 4), getRel(11, 6)];
+                case 'qA': return [rootObj, getRel(5, 3), getRel(10, 6)];
+                case 'qB': return [rootObj, getRel(5, 3), getRel(11, 6)];
+                case 'qC': return [rootObj, getRel(6, 3), getRel(11, 6)];
+                default: return [];
+            }
+        }
+
+        function calculateInterval(noteObj, bassObj) {
+            const semi = (noteObj.chroma - bassObj.chroma + 12) % 12;
+            const letDist = (noteObj.letter - bassObj.letter + 7) % 7;
+            return INTERVAL_MAP[`${letDist}-${semi}`] || "??";
+        }
+
+        function getAnalysisData() {
+            const rootObj = ALL_NOTE_NAMES.find(n => n.name === analyzerState.rootName);
+            const struct = getStructureNotes(rootObj, analyzerState.type);
+            const results = [];
+
+            for (let croma = 0; croma < 12; croma++) {
+                const enharmonicOptions = ENHARMONIC_PAIRS[croma];
+                const optionData = enharmonicOptions.map(name => {
+                    const bassObj = ALL_NOTE_NAMES.find(n => n.name === name);
+                    const intervals = struct.map(n => calculateInterval(n, bassObj));
+                    const intervalList = ["1", ...intervals];
+                    
+                    let matches = SCALES_DB.filter(scale => 
+                        intervalList.every(int => scale.intervals.includes(int))
+                    );
+                    
+                    if (analyzerState.activeFamily !== "Todos") {
+                        matches = matches.filter(scale => scale.name.includes(analyzerState.activeFamily));
+                    }
+                    
+                    return { 
+                        name, 
+                        bassObj, 
+                        matches, 
+                        isCompatible: matches.length > 0, 
+                        intervals: struct.map((n, idx) => ({ note: n.name, interval: intervals[idx] })) 
+                    };
+                });
+
+                const bestOption = optionData.find(o => o.name === analyzerState.bassPreferences[croma]) || optionData.find(o => o.isCompatible) || optionData[0];
+                
+                if (!bestOption.isCompatible && !analyzerState.showIncompatible) continue;
+
+                results.push({
+                    chroma: croma,
+                    bass: bestOption.bassObj,
+                    intervals: bestOption.intervals,
+                    matches: bestOption.matches,
+                    isCompatible: bestOption.isCompatible,
+                    hasEnharmonic: enharmonicOptions.length > 1,
+                });
+            }
+            return results;
+        }
+
+        function handleStateChange(key, value) {
+            analyzerState[key] = value;
+            renderAnalyzer();
+        }
+
+        function setActiveFamily(family) {
+            analyzerState.activeFamily = family;
+            renderAnalyzer();
+        }
+
+        function toggleIncompatible() {
+            analyzerState.showIncompatible = !analyzerState.showIncompatible;
+            renderAnalyzer();
+        }
+
+        function toggleBassEnharmonic(chroma) {
+            const options = ENHARMONIC_PAIRS[chroma];
+            const current = analyzerState.bassPreferences[chroma];
+            const next = options.find(o => o !== current);
+            analyzerState.bassPreferences[chroma] = next;
+            renderAnalyzer();
+        }
+
+        function renderFilters() {
+            const container = document.getElementById('family-filters');
+            container.innerHTML = MODE_FAMILIES.map(family => {
+                const isActive = analyzerState.activeFamily === family;
+                const activeClasses = 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-100 scale-105';
+                const inactiveClasses = 'bg-white border-slate-100 text-slate-500 hover:border-blue-200';
+                return `
+                    <button onclick="setActiveFamily('${family}')" class="px-5 py-3 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all border-2 ${isActive ? activeClasses : inactiveClasses}">
+                        ${family}
+                    </button>
+                `;
+            }).join('');
+
+            const toggleBtn = document.getElementById('toggle-incompatible-btn');
+            const eyeIcon = document.getElementById('eye-icon');
+            const eyeText = document.getElementById('eye-text');
+            
+            if (analyzerState.showIncompatible) {
+                toggleBtn.className = "flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md bg-orange-500 text-white";
+                eyeIcon.setAttribute('data-lucide', 'eye');
+                eyeText.textContent = 'Auditoría';
+            } else {
+                toggleBtn.className = "flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md bg-slate-800 text-white";
+                eyeIcon.setAttribute('data-lucide', 'eye-off');
+                eyeText.textContent = 'Solo Posibles';
+            }
+        }
+
+        function renderGrid() {
+            const data = getAnalysisData();
+            const container = document.getElementById('results-grid');
+            const rootObj = ALL_NOTE_NAMES.find(n => n.name === analyzerState.rootName);
+            const isQuartal = ['qA', 'qB', 'qC'].includes(analyzerState.type);
+
+            container.innerHTML = data.map((d, idx) => {
+                const isHome = d.bass.chroma === rootObj.chroma;
+                const symbol = isQuartal ? d.bass.name : `${rootObj.name}${TYPE_LABELS[analyzerState.type]}/${d.bass.name}`;
+
+                const cardStyle = d.isCompatible 
+                    ? (isHome ? 'border-blue-600 ring-[12px] ring-blue-50 scale-[1.03] z-10' : 'border-slate-50 hover:border-blue-200') 
+                    : 'border-red-50 bg-red-50/40';
+
+                return `
+                    <div class="bg-white rounded-[3.5rem] p-9 border-2 transition-all duration-500 flex flex-col shadow-lg group hover:shadow-2xl ${cardStyle}">
+                        <div class="flex justify-between items-start mb-8">
+                            <div class="flex-1">
+                                <span class="text-[10px] font-black uppercase tracking-widest block mb-2 ${d.isCompatible ? 'text-slate-400' : 'text-red-400'}">
+                                    ${isQuartal ? "Bajo Fundamental" : "US / Bajo"}
+                                </span>
+                                <h3 class="text-4xl font-black text-slate-800 tracking-tighter leading-none break-all">
+                                    ${symbol}
+                                </h3>
+                            </div>
+                            <div class="flex flex-col items-end gap-3">
+                                ${!d.isCompatible 
+                                    ? `<div class="bg-red-500 text-white p-2.5 rounded-2xl shadow-lg animate-pulse"><i data-lucide="alert-circle" class="w-5 h-5"></i></div>` 
+                                    : isHome ? `<div class="bg-blue-600 text-white p-2.5 rounded-2xl shadow-lg"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>` : ''}
+                                
+                                ${d.hasEnharmonic ? `
+                                <button onclick="toggleBassEnharmonic(${d.chroma})" class="p-2.5 rounded-2xl bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-md active:scale-90">
+                                    <i data-lucide="rotate-cw" class="w-4 h-4 md:w-5 md:h-5"></i>
+                                </button>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-10 flex-1">
+                            ${d.intervals.map(item => `
+                                <div class="flex items-center justify-between px-5 py-4 rounded-3xl border transition-all ${d.isCompatible ? 'bg-slate-50 border-transparent hover:bg-white hover:border-blue-100 hover:shadow-md' : 'bg-white/60 border-red-50'}">
+                                    <span class="text-[14px] font-black text-slate-500">${item.note}</span>
+                                    <div class="flex items-center gap-4">
+                                        <i data-lucide="arrow-right" class="w-3 h-3 ${d.isCompatible ? "text-slate-200" : "text-red-200"}"></i>
+                                        <span class="text-[14px] font-black px-4 py-2 rounded-xl shadow-sm border ${d.isCompatible ? 'text-blue-600 bg-white border-blue-50' : 'text-red-600 bg-white border-red-50'}">
+                                            ${item.interval}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="pt-8 border-t ${d.isCompatible ? 'border-slate-100' : 'border-red-100'}">
+                            <div class="flex flex-wrap gap-2.5 min-h-[35px]">
+                                ${d.isCompatible ? d.matches.map(m => `
+                                    <div class="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-2xl text-[12px] font-black shadow-sm leading-none">
+                                        <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div> 
+                                        <span>${m.name}</span>
+                                    </div>
+                                `).join('') : `
+                                    <div class="text-[12px] font-black text-red-400 italic bg-red-50 px-4 py-2.5 rounded-2xl border border-red-100 w-full flex items-center gap-3 tracking-tight leading-tight uppercase">
+                                        <i data-lucide="info" class="w-3.5 h-3.5"></i> Incompatible (${analyzerState.activeFamily})
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function initAnalyzer() {
+            const rootSelect = document.getElementById('root-select');
+            const validRoots = ALL_NOTE_NAMES.filter(n => !n.name.includes('#') || n.name === 'C#');
+            rootSelect.innerHTML = validRoots.map(n => `<option value="${n.name}">${n.name}</option>`).join('');
+            rootSelect.value = analyzerState.rootName;
+
+            renderAnalyzer();
+            
+            const scalesGrid = document.getElementById('scales-grid');
+            scalesGrid.innerHTML = SCALES_DB.map((s, i) => `
+                <div class="flex flex-col gap-2 border-b border-slate-50 pb-6 group hover:border-blue-100 transition-colors">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[14px] font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors leading-none">${s.name}</span>
+                        <span class="text-[10px] font-black text-slate-200">ID #${String(i+1).padStart(2, '0')}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        ${s.intervals.map(int => `
+                            <span class="px-3.5 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-[13px] font-black text-blue-600 shadow-sm min-w-[32px] text-center">${int}</span>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAnalyzer() {
+            renderFilters();
+            renderGrid();
+            lucide.createIcons();
+        }
+
+        function openHelpModal() {
+            const modal = document.getElementById('help-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex', 'modal-enter');
+        }
+
+        function closeHelpModal() {
+            const modal = document.getElementById('help-modal');
+            modal.classList.remove('flex', 'modal-enter');
+            modal.classList.add('hidden');
+        }
+
+        function openScalesModal() {
+            const modal = document.getElementById('scales-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex', 'modal-enter');
+        }
+
+        function closeScalesModal() {
+            const modal = document.getElementById('scales-modal');
+            modal.classList.remove('flex', 'modal-enter');
+            modal.classList.add('hidden');
+        }
+
+        window.onload = () => { 
+            initPiano(); 
+            updateMetroUI(); 
+            generateRandomGrid(); 
+            renderColors(); 
+            updateStaveInfo(); 
+            initBartok(); 
+            initStructs(); 
+            initTrocado(); 
+            initDesarrollo(); 
+            initAnalyzer(); // Inicializar el analizador
+            initMIDI(); 
+            lucide.createIcons(); 
+        };
+    </script>
+</body>
+</html>
