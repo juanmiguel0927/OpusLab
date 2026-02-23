@@ -85,9 +85,12 @@
 
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="bg-blue-600 p-1.5 rounded-lg text-white"><i data-lucide="music-4" class="w-5 h-5"></i></div>
-                <h1 class="text-lg font-bold tracking-tight">OpusLab <span class="text-blue-600"></span></h1>
+            <div class="flex flex-col gap-0.5">
+                <div class="flex items-center gap-2">
+                    <div class="bg-blue-600 p-1.5 rounded-lg text-white"><i data-lucide="music-4" class="w-5 h-5"></i></div>
+                    <h1 class="text-lg font-bold tracking-tight">OpusLab</h1>
+                </div>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Por Juan Miguel Rios Redondo</span>
             </div>
             <div id="midi-status" class="text-[9px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-400 uppercase tracking-widest">MIDI: Desconectado</div>
         </div>
@@ -426,7 +429,7 @@
                                 <h5 class="text-sm font-black uppercase tracking-widest text-emerald-800 mb-2">Dominantes Alterados (Estables)</h5>
                                 <p class="text-xs md:text-sm font-bold text-emerald-700 mb-2">Son aquellos en los que todas las extensiones posibles están alteradas (b9, #9, b5/#11, #5/b13).</p>
                                 <ul class="text-xs md:text-sm text-emerald-900 space-y-2 font-medium">
-                                    <li><strong>El Fenómeno Acústico:</strong> Aunque melódicamente suenan muy tensos, al alterar de forma simétrica o total el bloque superior, el acorde crea una nueva estructura coherente y un nuevo centro de gravedad (apoyado en la simetría de la escala alterada).</li>
+                                    <li><strong>El Fenómeno Acústico:</strong> Aunque melódicamente suenan muy tensos, al alterar de forma simétrica o total el bloque superior, el acorde creando una nueva estructura coherente y un nuevo centro de gravedad (apoyado en la simetría de la escala alterada).</li>
                                     <li><strong>Resultado:</strong> Paradójicamente, son estables. Al igual que los sin alterar, forman un bloque sonoro sólido que puede sostenerse por sí mismo sin desmoronarse.</li>
                                 </ul>
                             </div>
@@ -468,37 +471,43 @@
                                     <h1 class="text-2xl md:text-3xl font-black tracking-tighter uppercase leading-none text-slate-900">
                                         Analizador <span class="text-blue-600 italic">Superestructural</span>
                                     </h1>
-                                    <p class="text-blue-500 font-bold text-[10px] tracking-[0.3em] uppercase mt-2"></p>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full lg:w-auto">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full lg:w-auto">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">Fundamental US</label>
+                                    <div class="relative">
+                                        <select id="root-select" onchange="handleStateChange('rootName', this.value)" class="w-full lg:w-36 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:border-blue-600 cursor-pointer transition-all text-sm"></select>
+                                        <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-4 h-4"></i>
+                                    </div>
+                                </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">Bajo Fundamental</label>
                                     <div class="relative">
-                                        <select id="root-select" onchange="handleStateChange('root', this.value)" class="w-full lg:w-48 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:border-blue-600 cursor-pointer transition-all text-sm"></select>
+                                        <select id="bass-select" onchange="handleStateChange('bassFilter', this.value)" class="w-full lg:w-36 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:border-blue-600 cursor-pointer transition-all text-sm"></select>
                                         <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-4 h-4"></i>
                                     </div>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">US (Cualidad)</label>
                                     <div class="relative">
-                                        <select id="type-select" onchange="handleStateChange('type', this.value)" class="w-full lg:w-56 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-blue-600 outline-none focus:border-blue-600 cursor-pointer transition-all text-sm">
+                                        <select id="type-select" onchange="handleStateChange('type', this.value)" class="w-full lg:w-64 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-blue-600 outline-none focus:border-blue-600 cursor-pointer transition-all text-sm">
                                             <optgroup label="Tríadas">
-                                                <option value="maj">Tríada Mayor</option>
-                                                <option value="min">Tríada Menor</option>
-                                                <option value="aug">Tríada Aumentada</option>
+                                                <option value="maj">X</option>
+                                                <option value="min">Xm</option>
+                                                <option value="aug">X(#5)</option>
                                             </optgroup>
                                             <optgroup label="Tétradas">
-                                                <option value="maj7">maj7</option>
-                                                <option value="m7">m7</option>
-                                                <option value="m_maj7">m(maj7)</option>
-                                                <option value="maj7_aug">maj7(#5)</option>
+                                                <option value="maj7">Xmaj7</option>
+                                                <option value="m7">Xm7</option>
+                                                <option value="m_maj7">Xm(maj7)</option>
+                                                <option value="maj7_aug">Xmaj7(#5)</option>
                                             </optgroup>
                                             <optgroup label="Cuartas">
-                                                <option value="qA">Cuartas A (4j+4j)</option>
-                                                <option value="qB">Cuartas B (4j+7)</option>
-                                                <option value="qC">Cuartas C (#4+7)</option>
+                                                <option value="qA">4j+4j</option>
+                                                <option value="qB">4j+#4</option>
+                                                <option value="qC">#4+4j</option>
                                             </optgroup>
                                         </select>
                                         <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-300 pointer-events-none w-4 h-4"></i>
@@ -670,10 +679,11 @@
         <div id="random" class="tab-content space-y-4 pb-12">
             <div class="card bg-orange-50/30 border-orange-100 shadow-xl">
                 <div class="flex flex-col gap-6">
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
                         <div class="col-span-1"><label class="text-[9px] font-black mb-1 block uppercase text-orange-700">BPM</label><input type="number" id="metro-bpm" value="120" class="text-lg font-bold"></div>
                         <div class="col-span-1"><label class="text-[9px] font-black mb-1 block uppercase text-orange-700">Pulsos</label><input type="number" id="metro-pulses" value="4" class="text-lg font-bold" onchange="updateMetroUI()"></div>
                         <div class="col-span-1"><label class="text-[9px] font-black mb-1 block uppercase text-orange-700">Compases</label><input type="number" id="metro-compases" value="1" class="text-lg font-bold"></div>
+                        <div class="col-span-1"><label class="text-[9px] font-black mb-1 block uppercase text-orange-700" title="∞ = Infinito">Vueltas</label><input type="text" id="metro-vueltas" value="∞" class="text-lg font-bold text-center" title="∞ = Infinito"></div>
                         <div class="col-span-2 flex gap-2">
                             <button id="btn-play-random" onclick="toggleRandomPlay()" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white p-3 rounded-xl font-black flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-orange-200">
                                 <i data-lucide="play" id="icon-play" class="w-5 h-5"></i><span id="text-play">START</span>
@@ -789,21 +799,7 @@
                     </section>
 
                     <section class="space-y-5">
-                        <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b border-indigo-50 pb-3 flex items-center gap-2"><i data-lucide="music" class="w-4 h-4"></i> 2. Ortografía Armónica Estricta</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div class="p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
-                                <p class="font-black text-slate-800 text-[10px] uppercase mb-2">Bemoles Minúsculos (b)</p>
-                                <p class="text-xs font-medium leading-relaxed text-slate-500">Se utiliza estrictamente la 'b' minúscula para diferenciar las alteraciones de las letras de las notas, evitando errores visuales.</p>
-                            </div>
-                            <div class="p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
-                                <p class="font-black text-slate-800 text-[10px] uppercase mb-2">Símbolo Becuadro (♮)</p>
-                                <p class="text-xs font-medium leading-relaxed text-slate-500">Para indicar notas naturales en contextos alterados se utiliza el símbolo oficial ♮, garantizando una lectura musical estándar.</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="space-y-5">
-                        <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b border-indigo-50 pb-3 flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4"></i> 3. Simplificación de Grados</h3>
+                        <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b border-indigo-50 pb-3 flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4"></i> 2. Simplificación de Grados</h3>
                         <p class="text-sm font-medium leading-relaxed">
                             Para optimizar el análisis rápido de estructuras, las tensiones de extensión se han reducido a sus grados de octava simple:
                         </p>
@@ -813,6 +809,26 @@
                             <div class="text-center"><span class="block text-slate-400 text-[10px] uppercase">11na</span> 4</div>
                             <div class="text-center font-normal text-slate-300">→</div>
                             <div class="text-center"><span class="block text-slate-400 text-[10px] uppercase">13na</span> 6</div>
+                        </div>
+                    </section>
+
+                    <section class="space-y-5">
+                        <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b border-indigo-50 pb-3 flex items-center gap-2"><i data-lucide="check-square" class="w-4 h-4"></i> 3. Análisis de Intervalos y Modos</h3>
+                        <p class="text-sm font-medium leading-relaxed">
+                            El sistema analiza la estructura de abajo hacia arriba, tomando el <strong>Bajo</strong> como el grado 1. Luego calcula los intervalos formados por las notas de la Superestructura (US).
+                        </p>
+                        <p class="text-sm font-medium leading-relaxed">
+                            A continuación, compara esta lista de intervalos con las <strong>28 escalas base</strong>. Las escalas resultantes se ordenan de <strong>mayor a menor afinidad</strong> con el modo.
+                        </p>
+                        <div class="grid grid-cols-1 gap-4 mt-4">
+                            <div class="p-5 bg-amber-50 rounded-[2rem] border border-amber-100">
+                                <p class="font-black text-amber-800 text-[10px] uppercase mb-2">Resaltado de Nota Característica</p>
+                                <p class="text-xs font-medium leading-relaxed text-amber-700">La nota que define la esencia principal de un modo base (ej. la <strong>b2</strong> en el Frigio, <strong>#4</strong> en el Lidio o <strong>b7</strong> en el Mixolidio) se resalta en color <strong>ámbar</strong>.</p>
+                            </div>
+                            <div class="p-5 bg-purple-50 rounded-[2rem] border border-purple-100">
+                                <p class="font-black text-purple-800 text-[10px] uppercase mb-2">Notas de Color Adicionales</p>
+                                <p class="text-xs font-medium leading-relaxed text-purple-700">Las alteraciones que derivan de escalas complejas (ej. la <strong>b6</strong> en un Mixolidio b2 b6) no son características primarias del modo, sino colores adicionales, y se resaltan en color <strong>púrpura</strong>.</p>
+                            </div>
                         </div>
                     </section>
 
@@ -1271,7 +1287,7 @@
 
         function clearRoute() { routeProgression = []; currentVoices = null; renderRoute(); updateRouteOptions(); }
 
-        let cBeat = 0, cMeas = 0, cNoteIdx = 0, isPlay = false, waitBeats = 0;
+        let cBeat = 0, cMeas = 0, cNoteIdx = 0, isPlay = false, waitBeats = 0, cVuelta = 1;
         
         function scheduler() {
             while (nextTickTime < audioCtx.currentTime + 0.1) {
@@ -1292,10 +1308,10 @@
                 }
 
                 if (waitBeats > 0) {
-                    scheduleNote(-1, nextTickTime);
+                    scheduleNote(-1, 0, 0, nextTickTime);
                     waitBeats--;
                 } else {
-                    scheduleNote(cBeat, nextTickTime);
+                    scheduleNote(cBeat, cMeas, cNoteIdx, nextTickTime);
                     cBeat++;
                     if (cBeat >= ppC) { 
                         cBeat = 0; 
@@ -1305,10 +1321,14 @@
                             cNoteIdx++;
                             if (cNoteIdx >= 12) {
                                 cNoteIdx = 0; 
-                                waitBeats = 2;
-                                generateRandomGrid(); 
-                                highlight(0);
-                                document.getElementById('note-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                
+                                const maxVText = document.getElementById('metro-vueltas').value;
+                                const maxV = parseInt(maxVText) || 0;
+                                if (maxV > 0 && cVuelta >= maxV) {
+                                    toggleRandomPlay();
+                                    return;
+                                }
+                                cVuelta++;
                             } 
                         } 
                     }
@@ -1318,7 +1338,7 @@
             if (isPlay) timerID = setTimeout(scheduler, 25);
         }
 
-        function scheduleNote(beat, time) {
+        function scheduleNote(beat, meas, noteIdx, time) {
             const isWait = beat < 0;
             playTick(time, (beat === 0 && !isWait) ? 'accent' : 'normal');
             setTimeout(() => {
@@ -1327,7 +1347,23 @@
                     d.classList.remove('tick', 'accent'); 
                     if(i === beat && !isWait) d.classList.add(beat === 0 ? 'accent' : 'tick'); 
                 });
-                if (!isWait && beat === 0 && cMeas === 0) highlight(cNoteIdx);
+                
+                if (!isWait && beat === 0 && meas === 0) {
+                    highlight(noteIdx);
+                }
+
+                const ppC = parseInt(document.getElementById('metro-pulses').value) || 4;
+                const cpN = parseInt(document.getElementById('metro-compases').value) || 1;
+                const shiftBeat = Math.max(0, ppC - 2); 
+                
+                if (!isWait && noteIdx === 11 && meas === cpN - 1 && beat === shiftBeat) {
+                    const maxVText = document.getElementById('metro-vueltas').value;
+                    const maxV = parseInt(maxVText) || 0;
+                    if (!(maxV > 0 && cVuelta >= maxV)) {
+                        generateRandomGrid(); 
+                        document.getElementById('note-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
             }, (time - audioCtx.currentTime) * 1000);
         }
 
@@ -1337,10 +1373,9 @@
             isPlay = !isPlay; 
             if (isPlay) { 
                 if(audioCtx.state === 'suspended') audioCtx.resume(); 
-                cBeat = 0; cMeas = 0; cNoteIdx = 0; waitBeats = 2;
+                cBeat = 0; cMeas = 0; cNoteIdx = 0; waitBeats = 2; cVuelta = 1;
                 nextTickTime = audioCtx.currentTime + 0.05; 
                 generateRandomGrid();
-                highlight(0);
                 document.getElementById('note-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 scheduler(); 
                 updateUI(true); 
@@ -1348,6 +1383,7 @@
                 clearTimeout(timerID); 
                 updateUI(false); 
                 document.querySelectorAll('.note-box').forEach(e => e.classList.remove('active-note')); 
+                document.getElementById('metro-vueltas').value = '∞';
             } 
         }
 
@@ -1989,6 +2025,7 @@
         // --- LÓGICA DEL ANALIZADOR SUPERESTRUCTURAL ---
         let analyzerState = {
             rootName: 'C',
+            bassFilter: 'Todos',
             type: 'maj',
             activeFamily: 'Todos',
             showIncompatible: false,
@@ -2027,39 +2064,39 @@
         };
 
         const SCALES_DB = [
-            { name: "Jónico", intervals: ["1", "2", "3", "4", "5", "6", "7"] },
-            { name: "Dórico", intervals: ["1", "2", "b3", "4", "5", "6", "b7"] },
-            { name: "Frigio", intervals: ["1", "b2", "b3", "4", "5", "b6", "b7"] },
-            { name: "Lidio", intervals: ["1", "2", "3", "#4", "5", "6", "7"] },
-            { name: "Mixolidio", intervals: ["1", "2", "3", "4", "5", "6", "b7"] },
-            { name: "Eólico", intervals: ["1", "2", "b3", "4", "5", "b6", "b7"] },
-            { name: "Locrio", intervals: ["1", "b2", "b3", "4", "b5", "b6", "b7"] },
-            { name: "Eólico ♮7", intervals: ["1", "2", "b3", "4", "5", "b6", "7"] },
-            { name: "Locrio ♮6", intervals: ["1", "b2", "b3", "4", "b5", "6", "b7"] },
-            { name: "Jónico #5", intervals: ["1", "2", "3", "4", "#5", "6", "7"] },
-            { name: "Dórico #4", intervals: ["1", "2", "b3", "#4", "5", "6", "b7"] },
-            { name: "Mixolidio b2 b6", intervals: ["1", "b2", "3", "4", "5", "b6", "b7"] },
-            { name: "Lidio #2", intervals: ["1", "#2", "3", "#4", "5", "6", "7"] },
-            { name: "Locrio b4 bb7", intervals: ["1", "b2", "b3", "b4", "b5", "b6", "bb7"] },
-            { name: "Dórico ♮7", intervals: ["1", "2", "b3", "4", "5", "6", "7"] },
-            { name: "Frigio ♮6", intervals: ["1", "b2", "b3", "4", "5", "6", "b7"] },
-            { name: "Lidio #5", intervals: ["1", "2", "3", "#4", "#5", "6", "7"] },
-            { name: "Mixolidio #4", intervals: ["1", "2", "3", "#4", "5", "6", "b7"] },
-            { name: "Mixolidio b6", intervals: ["1", "2", "3", "4", "5", "b6", "b7"] },
-            { name: "Locrio ♮2", intervals: ["1", "2", "b3", "4", "b5", "b6", "b7"] },
-            { name: "Mixolidio Alterado", intervals: ["1", "b2", "#2", "3", "b5", "b6", "b7"] },
-            { name: "Jónico b6", intervals: ["1", "2", "3", "4", "5", "b6", "7"] },
-            { name: "Locrio ♮2 ♮6", intervals: ["1", "2", "b3", "4", "b5", "6", "b7"] },
-            { name: "Mixolidio b2 #2 b6", intervals: ["1", "b2", "#2", "3", "5", "b6", "b7"] },
-            { name: "Dórico #4 ♮7", intervals: ["1", "2", "b3", "#4", "5", "6", "7"] },
-            { name: "Mixolidio b2", intervals: ["1", "b2", "3", "4", "5", "6", "b7"] },
-            { name: "Lidio #2 #5", intervals: ["1", "#2", "3", "#4", "#5", "6", "7"] },
-            { name: "Locrio bb7", intervals: ["1", "b2", "b3", "4", "b5", "b6", "bb7"] }
+            { name: "Jónico", intervals: ["1", "2", "3", "4", "5", "6", "7"], chars: ["4"], colors: [] },
+            { name: "Dórico", intervals: ["1", "2", "b3", "4", "5", "6", "b7"], chars: ["6"], colors: [] },
+            { name: "Frigio", intervals: ["1", "b2", "b3", "4", "5", "b6", "b7"], chars: ["b2"], colors: [] },
+            { name: "Lidio", intervals: ["1", "2", "3", "#4", "5", "6", "7"], chars: ["#4"], colors: [] },
+            { name: "Mixolidio", intervals: ["1", "2", "3", "4", "5", "6", "b7"], chars: ["b7"], colors: [] },
+            { name: "Eólico", intervals: ["1", "2", "b3", "4", "5", "b6", "b7"], chars: ["b6"], colors: [] },
+            { name: "Locrio", intervals: ["1", "b2", "b3", "4", "b5", "b6", "b7"], chars: ["b5"], colors: [] },
+            { name: "Eólico ♮7", intervals: ["1", "2", "b3", "4", "5", "b6", "7"], chars: ["b6"], colors: ["7"] },
+            { name: "Locrio ♮6", intervals: ["1", "b2", "b3", "4", "b5", "6", "b7"], chars: ["b5"], colors: ["6"] },
+            { name: "Jónico #5", intervals: ["1", "2", "3", "4", "#5", "6", "7"], chars: ["4"], colors: ["#5"] },
+            { name: "Dórico #4", intervals: ["1", "2", "b3", "#4", "5", "6", "b7"], chars: ["6"], colors: ["#4"] },
+            { name: "Mixolidio b2 b6", intervals: ["1", "b2", "3", "4", "5", "b6", "b7"], chars: ["b7"], colors: ["b2", "b6"] },
+            { name: "Lidio #2", intervals: ["1", "#2", "3", "#4", "5", "6", "7"], chars: ["#4"], colors: ["#2"] },
+            { name: "Locrio b4 bb7", intervals: ["1", "b2", "b3", "b4", "b5", "b6", "bb7"], chars: ["b5"], colors: ["b4", "bb7"] },
+            { name: "Dórico ♮7", intervals: ["1", "2", "b3", "4", "5", "6", "7"], chars: ["6"], colors: ["7"] },
+            { name: "Frigio ♮6", intervals: ["1", "b2", "b3", "4", "5", "6", "b7"], chars: ["b2"], colors: ["6"] },
+            { name: "Lidio #5", intervals: ["1", "2", "3", "#4", "#5", "6", "7"], chars: ["#4"], colors: ["#5"] },
+            { name: "Mixolidio #4", intervals: ["1", "2", "3", "#4", "5", "6", "b7"], chars: ["b7"], colors: ["#4"] },
+            { name: "Mixolidio b6", intervals: ["1", "2", "3", "4", "5", "b6", "b7"], chars: ["b7"], colors: ["b6"] },
+            { name: "Locrio ♮2", intervals: ["1", "2", "b3", "4", "b5", "b6", "b7"], chars: ["b5"], colors: ["2"] },
+            { name: "Mixolidio Alterado", intervals: ["1", "b2", "#2", "3", "b5", "b6", "b7"], chars: ["b7"], colors: ["b2", "#2", "b5", "b6"] },
+            { name: "Jónico b6", intervals: ["1", "2", "3", "4", "5", "b6", "7"], chars: ["4"], colors: ["b6"] },
+            { name: "Locrio ♮2 ♮6", intervals: ["1", "2", "b3", "4", "b5", "6", "b7"], chars: ["b5"], colors: ["2", "6"] },
+            { name: "Mixolidio b2 #2 b6", intervals: ["1", "b2", "#2", "3", "5", "b6", "b7"], chars: ["b7"], colors: ["b2", "#2", "b6"] },
+            { name: "Dórico #4 ♮7", intervals: ["1", "2", "b3", "#4", "5", "6", "7"], chars: ["6"], colors: ["#4", "7"] },
+            { name: "Mixolidio b2", intervals: ["1", "b2", "3", "4", "5", "6", "b7"], chars: ["b7"], colors: ["b2"] },
+            { name: "Lidio #2 #5", intervals: ["1", "#2", "3", "#4", "#5", "6", "7"], chars: ["#4"], colors: ["#2", "#5"] },
+            { name: "Locrio bb7", intervals: ["1", "b2", "b3", "4", "b5", "b6", "bb7"], chars: ["b5"], colors: ["bb7"] }
         ];
 
         const TYPE_LABELS = {
             'maj': '', 'min': 'm', 'aug': '(#5)', 'maj7': 'maj7', 'm7': 'm7', 
-            'm_maj7': 'm(maj7)', 'maj7_aug': 'maj7(#5)', 'qA': 'Cuartas A', 'qB': 'Cuartas B', 'qC': 'Cuartas C'
+            'm_maj7': 'm(maj7)', 'maj7_aug': 'maj7(#5)', 'qA': '', 'qB': '', 'qC': ''
         };
 
         const MODE_FAMILIES = ["Todos", "Jónico", "Dórico", "Frigio", "Lidio", "Mixolidio", "Eólico", "Locrio"];
@@ -2100,10 +2137,23 @@
 
             for (let croma = 0; croma < 12; croma++) {
                 const enharmonicOptions = ENHARMONIC_PAIRS[croma];
+                
+                if (analyzerState.bassFilter !== 'Todos' && !enharmonicOptions.includes(analyzerState.bassFilter)) {
+                    continue;
+                }
+
                 const optionData = enharmonicOptions.map(name => {
                     const bassObj = ALL_NOTE_NAMES.find(n => n.name === name);
-                    const intervals = struct.map(n => calculateInterval(n, bassObj));
-                    const intervalList = ["1", ...intervals];
+                    
+                    const intervals = struct.map(n => {
+                        const semi = (n.chroma - bassObj.chroma + 12) % 12;
+                        return { note: n.name, interval: calculateInterval(n, bassObj), semi: semi };
+                    });
+                    
+                    intervals.push({ note: bassObj.name, interval: "1", semi: 0 });
+                    intervals.sort((a, b) => b.semi - a.semi);
+
+                    const intervalList = intervals.map(i => i.interval);
                     
                     let matches = SCALES_DB.filter(scale => 
                         intervalList.every(int => scale.intervals.includes(int))
@@ -2112,17 +2162,56 @@
                     if (analyzerState.activeFamily !== "Todos") {
                         matches = matches.filter(scale => scale.name.includes(analyzerState.activeFamily));
                     }
+
+                    let matchedChars = new Set();
+                    let matchedColors = new Set();
+                    
+                    matches.forEach(scale => {
+                        if (scale.chars) {
+                            scale.chars.forEach(c => {
+                                if (intervalList.includes(c)) matchedChars.add(c);
+                            });
+                        }
+                        if (scale.colors) {
+                            scale.colors.forEach(c => {
+                                if (intervalList.includes(c)) matchedColors.add(c);
+                            });
+                        }
+                    });
+
+                    matches = matches.map(scale => {
+                        const hasChar = scale.chars && scale.chars.some(c => intervalList.includes(c));
+                        const matchedColorsCount = scale.colors ? scale.colors.filter(c => intervalList.includes(c)).length : 0;
+                        
+                        let affinityScore = 0;
+                        if (scale.colors && scale.colors.length === 0) affinityScore += 100; // Modos Base tienen prioridad absoluta
+                        if (hasChar) affinityScore += 50; 
+                        affinityScore += matchedColorsCount * 10;
+                        
+                        return { ...scale, hasChar, affinityScore };
+                    });
+
+                    // Ordenar de mayor afinidad a menor
+                    matches.sort((a, b) => b.affinityScore - a.affinityScore);
                     
                     return { 
                         name, 
                         bassObj, 
                         matches, 
                         isCompatible: matches.length > 0, 
-                        intervals: struct.map((n, idx) => ({ note: n.name, interval: intervals[idx] })) 
+                        intervals: intervals.map(i => ({
+                            ...i, 
+                            isChar: matchedChars.has(i.interval),
+                            isColor: matchedColors.has(i.interval) && !matchedChars.has(i.interval)
+                        }))
                     };
                 });
 
-                const bestOption = optionData.find(o => o.name === analyzerState.bassPreferences[croma]) || optionData.find(o => o.isCompatible) || optionData[0];
+                let bestOption = optionData.find(o => o.name === analyzerState.bassPreferences[croma]) || optionData.find(o => o.isCompatible) || optionData[0];
+                
+                if (analyzerState.bassFilter !== 'Todos') {
+                    bestOption = optionData.find(o => o.name === analyzerState.bassFilter) || bestOption;
+                }
                 
                 if (!bestOption.isCompatible && !analyzerState.showIncompatible) continue;
 
@@ -2208,7 +2297,7 @@
                         <div class="flex justify-between items-start mb-8">
                             <div class="flex-1">
                                 <span class="text-[10px] font-black uppercase tracking-widest block mb-2 ${d.isCompatible ? 'text-slate-400' : 'text-red-400'}">
-                                    ${isQuartal ? "Bajo Fundamental" : "US / Bajo"}
+                                    ${isQuartal ? 'Bajo Fundamental' : 'US / Bajo'}
                                 </span>
                                 <h3 class="text-4xl font-black text-slate-800 tracking-tighter leading-none break-all">
                                     ${symbol}
@@ -2229,11 +2318,11 @@
 
                         <div class="space-y-3 mb-10 flex-1">
                             ${d.intervals.map(item => `
-                                <div class="flex items-center justify-between px-5 py-4 rounded-3xl border transition-all ${d.isCompatible ? 'bg-slate-50 border-transparent hover:bg-white hover:border-blue-100 hover:shadow-md' : 'bg-white/60 border-red-50'}">
-                                    <span class="text-[14px] font-black text-slate-500">${item.note}</span>
+                                <div class="flex items-center justify-between px-5 py-4 rounded-3xl border transition-all ${d.isCompatible ? (item.interval === '1' ? 'bg-blue-50 border-blue-100 shadow-sm' : (item.isChar ? 'bg-amber-50 border-amber-200 shadow-sm' : (item.isColor ? 'bg-purple-50 border-purple-200 shadow-sm' : 'bg-slate-50 border-transparent hover:bg-white hover:border-blue-100 hover:shadow-md'))) : 'bg-white/60 border-red-50'}">
+                                    <span class="text-[14px] font-black ${item.interval === '1' ? 'text-blue-700' : (item.isChar ? 'text-amber-800' : (item.isColor ? 'text-purple-800' : 'text-slate-500'))}">${item.note}</span>
                                     <div class="flex items-center gap-4">
-                                        <i data-lucide="arrow-right" class="w-3 h-3 ${d.isCompatible ? "text-slate-200" : "text-red-200"}"></i>
-                                        <span class="text-[14px] font-black px-4 py-2 rounded-xl shadow-sm border ${d.isCompatible ? 'text-blue-600 bg-white border-blue-50' : 'text-red-600 bg-white border-red-50'}">
+                                        <i data-lucide="arrow-right" class="w-3 h-3 ${d.isCompatible ? (item.isChar ? 'text-amber-400' : (item.isColor ? 'text-purple-400' : 'text-slate-200')) : "text-red-200"}"></i>
+                                        <span class="text-[14px] font-black px-4 py-2 rounded-xl shadow-sm border ${d.isCompatible ? (item.interval === '1' ? 'text-blue-700 bg-white border-blue-200' : (item.isChar ? 'text-amber-800 bg-amber-100 border-amber-300' : (item.isColor ? 'text-purple-800 bg-purple-100 border-purple-300' : 'text-blue-600 bg-white border-blue-50'))) : 'text-red-600 bg-white border-red-50'}">
                                             ${item.interval}
                                         </span>
                                     </div>
@@ -2244,8 +2333,8 @@
                         <div class="pt-8 border-t ${d.isCompatible ? 'border-slate-100' : 'border-red-100'}">
                             <div class="flex flex-wrap gap-2.5 min-h-[35px]">
                                 ${d.isCompatible ? d.matches.map(m => `
-                                    <div class="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-2xl text-[12px] font-black shadow-sm leading-none">
-                                        <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div> 
+                                    <div class="flex items-center gap-2 px-4 py-2.5 ${m.hasChar ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'} rounded-2xl text-[12px] font-black shadow-sm leading-none">
+                                        <div class="w-1.5 h-1.5 ${m.hasChar ? 'bg-amber-500' : 'bg-emerald-400'} rounded-full"></div> 
                                         <span>${m.name}</span>
                                     </div>
                                 `).join('') : `
@@ -2262,9 +2351,14 @@
 
         function initAnalyzer() {
             const rootSelect = document.getElementById('root-select');
+            const bassSelect = document.getElementById('bass-select');
             const validRoots = ALL_NOTE_NAMES.filter(n => !n.name.includes('#') || n.name === 'C#');
+            
             rootSelect.innerHTML = validRoots.map(n => `<option value="${n.name}">${n.name}</option>`).join('');
             rootSelect.value = analyzerState.rootName;
+
+            bassSelect.innerHTML = `<option value="Todos">Todos (12)</option>` + validRoots.map(n => `<option value="${n.name}">${n.name}</option>`).join('');
+            bassSelect.value = analyzerState.bassFilter;
 
             renderAnalyzer();
             
