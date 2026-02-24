@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpusLab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -857,7 +857,7 @@
                     Para encontrar las notas a evitar se han establecido dos reglas básicas:
                 </p>
                 <ul class="text-sm md:text-base text-slate-700 space-y-2 font-medium list-decimal pl-5 mb-4">
-                    <li><strong>Semitono Ascendente:</strong> Que no se forme semitono ascendente entre cualquier nota del acorde y la nota del modo que le corresponde জানালা superior.</li>
+                    <li><strong>Semitono Ascendente:</strong> Que no se forme semitono ascendente entre cualquier nota del acorde y la nota del modo que le corresponde inmediatamente superior.</li>
                     <li><strong>Tritono con Tonos Guía:</strong> Que no se forme tritono entre los tonos guía del acorde (3ra o 7ma) y cualquier nota del modo que no pertenezca al acorde.</li>
                 </ul>
 
@@ -1042,62 +1042,31 @@
             }
         }
 
-        // Sintetizador avanzado de Piano Web Audio
-        function playSynthNote(freq, time, dur, vol) {
+        function playNote(freq, dur=0.5, vol=0.15) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const noteGain = audioCtx.createGain();
-            noteGain.gain.setValueAtTime(0, time);
-            noteGain.gain.linearRampToValueAtTime(vol, time + 0.015);
-            noteGain.gain.exponentialRampToValueAtTime(vol * 0.3, time + 0.3);
-            noteGain.gain.exponentialRampToValueAtTime(0.001, time + dur);
-            noteGain.connect(audioCtx.destination);
-
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.Q.value = 0.8;
-            filter.frequency.setValueAtTime(freq * 4, time);
-            filter.frequency.exponentialRampToValueAtTime(freq * 1.5, time + 0.3);
-            filter.connect(noteGain);
-
-            const osc1 = audioCtx.createOscillator();
-            osc1.type = 'triangle';
-            osc1.frequency.setValueAtTime(freq, time);
-            osc1.connect(filter);
-            
-            const osc2 = audioCtx.createOscillator();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(freq, time);
-            const osc2Gain = audioCtx.createGain();
-            osc2Gain.gain.value = 0.8;
-            osc2.connect(osc2Gain);
-            osc2Gain.connect(filter);
-
-            const osc3 = audioCtx.createOscillator();
-            osc3.type = 'square';
-            osc3.frequency.setValueAtTime(freq, time);
-            const osc3Gain = audioCtx.createGain();
-            osc3Gain.gain.setValueAtTime(0.04, time);
-            osc3Gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
-            osc3.connect(osc3Gain);
-            osc3Gain.connect(filter);
-
-            osc1.start(time); osc2.start(time); osc3.start(time);
-            osc1.stop(time + dur); osc2.stop(time + dur); osc3.stop(time + dur);
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = 'triangle'; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(vol * masterVolume, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + dur);
         }
 
-        function playNote(freq, dur=2.0, vol=0.2) {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            playSynthNote(freq, audioCtx.currentTime, dur, vol * masterVolume);
-        }
-
-        function playVoices(voices, dur=2.0, startTime=null) {
+        function playVoices(voices, dur=1.5, startTime=null) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const time = startTime !== null ? startTime : audioCtx.currentTime;
-            voices.forEach((midi, index) => {
+            voices.forEach(midi => {
                 const freq = 440 * Math.pow(2, (midi - 69) / 12);
-                const vol = index === 0 ? 0.15 : 0.1;
-                playSynthNote(freq, time, dur, vol * masterVolume);
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(freq, time);
+                g.gain.setValueAtTime(0.08 * masterVolume, time); 
+                g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                o.start(time);
+                o.stop(time + dur);
             });
         }
 
@@ -1128,7 +1097,7 @@
                     prevMidi = m;
                 }
             }
-            playVoices(voices, 2.0);
+            playVoices(voices, 1.5);
         }
 
         async function initMIDI() {
@@ -1507,8 +1476,11 @@
             routeProgression.forEach((chord) => {
                 chord.voices.forEach(midi => {
                     const freq = 440 * Math.pow(2, (midi - 69) / 12);
-                    // Use standard osc here, or swap to playSynthNote for uniform e-piano sound
-                    playSynthNote(freq, time, 1.2, 0.08 * masterVolume);
+                    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                    o.type = 'triangle'; o.frequency.setValueAtTime(freq, time);
+                    g.gain.setValueAtTime(0.08 * masterVolume, time); g.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.start(time); o.stop(time + 1.2);
                 });
                 time += 1.5; 
             });
@@ -2661,4 +2633,4 @@
         };
     </script>
 </body>
-</html>
+    </html>
