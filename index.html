@@ -337,6 +337,7 @@
                     <button onclick="showStructsSubTab('diatonic')" id="stab-diatonic" class="px-3 py-2 text-[10px] md:text-xs font-black uppercase rounded-lg bg-blue-600 text-white shadow-sm transition-colors shadow-sm">E. Superior Diatónicas</button>
                     <button onclick="showStructsSubTab('dom')" id="stab-dom" class="px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">Dominantes, Frigios y Sus</button>
                     <button onclick="showStructsSubTab('fisica')" id="stab-fisica" class="px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">Física Dominantes</button>
+                    <button onclick="showStructsSubTab('poly')" id="stab-poly" class="px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">Poliacordes</button>
                     <button onclick="showStructsSubTab('analyzer')" id="stab-analyzer" class="px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">Super Estructuralismo</button>
                 </div>
                 
@@ -366,6 +367,64 @@
                         </div>
                         <div class="bg-slate-100 border border-slate-300 rounded-xl p-5"><h5 class="text-sm font-black uppercase tracking-widest text-slate-800 mb-2">CONCLUSIÓN PRÁCTICA</h5><p class="text-sm md:text-base font-medium text-slate-700 leading-relaxed">Si buscas que un acorde dominante funcione como un "color" sobre el cual reposar o improvisar largamente, utiliza dominantes <strong>Sin Alterar</strong> o totalmente <strong>Alterados</strong>.<br><br>Pero si tu objetivo es generar movimiento, empuje y obligar al oído del espectador a pedir una resolución inmediata, utiliza un dominante <strong>Semi-alterado</strong>.</p></div>
                     </div>
+                </div>
+
+                <div id="scontent-poly" class="hidden animate-[fadeIn_0.3s_ease-in-out]">
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border-2 dark:border-slate-700 shadow-sm mb-6">
+                        
+                        <div class="flex flex-col lg:flex-row justify-between items-center gap-6 mb-6">
+                            <div class="flex items-center gap-4">
+                                <div class="bg-purple-600 p-4 rounded-2xl text-white shadow-xl"><i data-lucide="layers" class="w-6 h-6"></i></div>
+                                <div class="flex items-center gap-3">
+                                    <h1 class="text-2xl font-black uppercase text-slate-800 dark:text-white">Analizador de <span class="text-purple-600 dark:text-purple-400">Poliacordes</span></h1>
+                                    <button onclick="document.getElementById('poly-help-box').classList.toggle('hidden'); if(window.lucide)lucide.createIcons();" class="text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors focus:outline-none" title="Ver explicación teórica">
+                                        <i data-lucide="help-circle" class="w-6 h-6"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-center bg-slate-50 dark:bg-slate-900/50 p-2 px-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <label class="text-[10px] font-bold uppercase text-slate-500">Cantidad:</label>
+                                <select id="poly-count" onchange="polyState.count = parseInt(this.value); renderPolyInputs();" class="w-24 font-black text-purple-600 bg-transparent border-none outline-none cursor-pointer">
+                                    <option value="2">2 Acordes</option>
+                                    <option value="3">3 Acordes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Cuadro de Explicación (Oculto por defecto) -->
+                        <div id="poly-help-box" class="hidden bg-purple-50 border border-purple-200 p-5 rounded-xl mb-6 shadow-sm dark:bg-purple-900/20 dark:border-purple-800/50 animate-[fadeIn_0.3s_ease-in-out]">
+                            <div class="flex justify-between items-start mb-4">
+                                <h4 class="text-sm font-black uppercase tracking-widest text-purple-800 dark:text-purple-400 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5"></i> Poliacordes vs. Superestructuras</h4>
+                                <button onclick="document.getElementById('poly-help-box').classList.add('hidden')" class="text-purple-500 hover:text-purple-800 dark:hover:text-purple-300"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30">
+                                    <h5 class="text-xs font-black uppercase text-slate-800 dark:text-white mb-2">1. Poliacorde</h5>
+                                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                                        Consiste en conseguir un acorde complejo dividiéndolo en 2 partes. Esta forma presenta dos aplicaciones principales:
+                                        <br><br>
+                                        <strong>A) Aplicación Tonal:</strong> Se aplica buscando la funcionalidad tonal, encontrando y aportando las tensiones disponibles del acorde base.
+                                        <br><br>
+                                        <strong>B) Aplicación Bitonal o Politonal:</strong> Dos entidades armónicas independientes sonando al mismo tiempo, sin subordinarse la una a la otra, generando múltiples centros tonales.
+                                        <br><br>
+                                        <span class="inline-block bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded mt-2 font-mono">Ej: C Mayor en el bajo y F# Mayor arriba.</span>
+                                    </p>
+                                </div>
+                                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-100 dark:border-purple-800/30 flex flex-col justify-between">
+                                    <div>
+                                        <h5 class="text-xs font-black uppercase text-slate-800 dark:text-white mb-2">2. Superestructura (Método Corto)</h5>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">Construir acordes mediante superestructuras es un "método corto". Consiste en superponer un grupo básico de 3 notas (a veces 4 para definir bien el acorde) sobre un bajo o fundamental. Aunque el nombre y la sonoridad real parten del bajo, la estructura superior aporta una sonoridad propia, permitiendo técnicas complejas.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="poly-inputs" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border-t border-slate-100 dark:border-slate-700 pt-6"></div>
+                        <div class="flex justify-center mt-6">
+                            <button onclick="analyzePoly()" class="bg-purple-600 text-white px-8 py-3 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-md hover:bg-purple-700 transition-all flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4"></i> Calcular Interválica</button>
+                        </div>
+                    </div>
+                    <div id="poly-results" class="mt-6"></div>
                 </div>
 
                 <div id="scontent-analyzer" class="hidden animate-[fadeIn_0.3s_ease-in-out]">
@@ -731,8 +790,8 @@
         const DOM_TRIADS=[{g:"Im",t:["#9","13"],s:"Mixolidia b9, #9, 13",c:"Mixo"},{g:"bIIm",t:["b9","b13"],s:"Mixolidia b9, b13",c:"Mixo"},{g:"II",t:["9","#11","13"],s:"Mixolidia #11",c:"Mixo"},{g:"bIIIm",t:["#9","#11"],s:"Mixolidia Alterada",c:"Mixo"},{g:"bIII",t:["b9","#9","b13"],s:"Mixolidia b9, #9, b13",c:"Mixo"},{g:"#IVdim",t:["#11"],s:"Mixolidia #11",c:"Mixo"},{g:"#IVm",t:["b9","#11","13"],s:"Locrio 6",c:"Mixo"},{g:"bV",t:["b9","#11"],s:"Mixolidia Alterada",c:"Mixo"},{g:"Vdim",t:["b9"],s:"Mixolidia b9",c:"Mixo"},{g:"Vm",t:["9"],s:"Mixolidia",c:"Mixo"},{g:"bVI",t:["b9","#9","b13"],s:"Mixolidia b9, #9, b13",c:"Mixo"},{g:"bVIaug",t:["b13"],s:"Mixolidia b13",c:"Mixo"},{g:"VIm",t:["13"],s:"Mixolidia",c:"Mixo"},{g:"VI",t:["b9"],s:"Mixolidia b9",c:"Mixo"},{g:"bII",t:["b9","11","b13"],s:"Mixolidia b9, b13",c:"Frigio"},{g:"bIIaug",t:["b9","11","13"],s:"Mixolidia b9",c:"Frigio"},{g:"bVIIm",t:["b9","11"],s:"Mixolidia b9",c:"Frigio"},{g:"IIdim",t:["9","11","b13"],s:"Mixolidia b13",c:"Sus"},{g:"IIm",t:["9","11","13"],s:"Mixolidia",c:"Sus"},{g:"IVm",t:["11","b13"],s:"Mixolidia b13",c:"Sus"},{g:"IV",t:["11","13"],s:"Mixolidia",c:"Sus"},{g:"bVII",t:["9","11"],s:"Mixolidia",c:"Sus"}];
         const DOM_TETRADS=[{g:"Im7",t:["#9"],s:"Mixolidia b9, #9, 13",c:"Mixo"},{g:"bIIm(maj7)",t:["b9"],s:"Mixolidia b9, b13",c:"Mixo"},{g:"II7",t:["9","#11"],s:"Mixolidia #11",c:"Mixo"},{g:"bIIIm7",t:["b9","#11"],s:"Mixolidia Alterada",c:"Mixo"},{g:"bIIIm7(b5)",t:["b9","#9","#11"],s:"Locrio 6",c:"Mixo"},{g:"bIII7",t:["#11"],s:"Mixolidia b9, #9, b13",c:"Mixo"},{g:"#IVm7(b5)",t:["#11"],s:"Mixolidia #11",c:"Mixo"},{g:"#IV7",t:[],s:"Mixolidia Alterada",c:"Mixo"},{g:"V°7",t:["b9"],s:"Mixolidia b9",c:"Mixo"},{g:"Vm(maj7)",t:[],s:"Mixolidia #11",c:"Mixo"},{g:"bVImaj7",t:[],s:"Mixolidia b9, #9, b13",c:"Mixo"},{g:"bVImaj7(#5)",t:[],s:"Mixolidia b13",c:"Mixo"},{g:"VIm7",t:[],s:"Mixolidia",c:"Mixo"},{g:"VI7",t:[],s:"Mixolidia b9",c:"Mixo"},{g:"bIImaj7",t:["11"],s:"Mixolidia b9, b13",c:"Frigio"},{g:"bIImaj7(#5)",t:[],s:"Mixolidia b9",c:"Frigio"},{g:"bVIIm(maj7)",t:["11"],s:"Mixolidia b9",c:"Frigio"},{g:"IIm7(b5)",t:[],s:"Mixolidia b13",c:"Sus"},{g:"IIm7",t:[],s:"Mixolidia",c:"Sus"},{g:"IVm(maj7)",t:[],s:"Mixolidia b13",c:"Sus"},{g:"IVmaj7",t:[],s:"Mixolidia",c:"Sus"},{g:"bVIImaj7",t:[],s:"Mixolidia",c:"Sus"}];
 
-        function initStructs(){const r=id('structs-root'),dr=id('dom-root');if(r&&dr){r.innerHTML=NT_P.map((n,i)=>`<option value="${i}">${n}</option>`).join('');dr.innerHTML=NT_P.map((n,i)=>`<option value="${i}">${n}</option>`).join('');renderStructs();renderDomStructs();}}
-        function showStructsSubTab(t){['diatonic','dom','fisica','analyzer'].forEach(s=>{const c=id(`scontent-${s}`),b=id(`stab-${s}`);if(c){if(s===t){c.classList.remove('hidden');c.style.display='';}else{c.classList.add('hidden');c.style.display='none';}}if(b)b.className=s===t?"px-3 py-2 text-[10px] md:text-xs font-black uppercase rounded-lg bg-blue-600 text-white shadow-sm transition-colors":"px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors";});}
+        function initStructs(){const r=id('structs-root'),dr=id('dom-root');if(r&&dr){r.innerHTML=NT_P.map((n,i)=>`<option value="${i}">${n}</option>`).join('');dr.innerHTML=NT_P.map((n,i)=>`<option value="${i}">${n}</option>`).join('');renderStructs();renderDomStructs();}renderPolyInputs();}
+        function showStructsSubTab(t){['diatonic','dom','fisica','poly','analyzer'].forEach(s=>{const c=id(`scontent-${s}`),b=id(`stab-${s}`);if(c){if(s===t){c.classList.remove('hidden');c.style.display='';}else{c.classList.add('hidden');c.style.display='none';}}if(b)b.className=s===t?"px-3 py-2 text-[10px] md:text-xs font-black uppercase rounded-lg bg-blue-600 text-white shadow-sm transition-colors":"px-3 py-2 text-[10px] md:text-xs font-bold uppercase rounded-lg text-slate-500 hover:bg-slate-100 transition-colors";});}
         
         function renderStructs() {
             const rI=parseInt(id('structs-root').value),rN=NT_P[rI];
@@ -771,6 +830,239 @@
 
         function getAnStruct(r,t){const gR=(s,l)=>{const tc=(r.chroma+s)%12,tl=(r.letter+l)%7;return A_NN.find(n=>n.chroma===tc&&n.letter===tl)||A_NN.find(n=>n.chroma===tc);};switch(t){case 'maj':return[r,gR(4,2),gR(7,4)];case 'min':return[r,gR(3,2),gR(7,4)];case 'aug':return[r,gR(4,2),gR(8,4)];case 'maj7':return[r,gR(4,2),gR(7,4),gR(11,6)];case 'm7':return[r,gR(3,2),gR(7,4),gR(10,6)];case 'm_maj7':return[r,gR(3,2),gR(7,4),gR(11,6)];case 'maj7_aug':return[r,gR(4,2),gR(8,4),gR(11,6)];case 'qA':return[r,gR(5,3),gR(10,6)];case 'qB':return[r,gR(5,3),gR(11,6)];case 'qC':return[r,gR(6,3),gR(11,6)];default:return[];}}
         function calcInt(n,b){const s=(n.chroma-b.chroma+12)%12,ld=(n.letter-b.letter+7)%7;return {"0-0":"1","0-1":"#1","1-1":"b2","1-2":"2","1-3":"#2","2-3":"b3","2-4":"3","2-5":"#3","3-4":"b4","3-5":"4","3-6":"#4","4-6":"b5","4-7":"5","4-8":"#5","5-8":"b6","5-9":"6","5-10":"#6","6-9":"bb7","6-10":"b7","6-11":"7"}[`${ld}-${s}`]||"??";}
+
+        // ==========================================
+        // LÓGICA DE POLIACORDES
+        // ==========================================
+        const P_FLATS = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+        const P_SHARPS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+        let polyState = { count: 2, chords: [{ root: 'C', type: 'maj' }, { root: 'D', type: 'maj' }, { root: 'E', type: 'maj' }] };
+
+        function renderPolyInputs() {
+            const c = id('poly-inputs'); if (!c) return; let h = '';
+            
+            if (polyState.count === 2) {
+                h += `
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-3 shadow-sm">
+                    <span class="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-slate-200 dark:border-slate-700 pb-1">Acorde Base (Grave)</span>
+                    <div class="flex gap-2">
+                        <select onchange="polyState.chords[0].root = this.value" class="w-20 font-bold text-slate-800 dark:text-white rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                            ${NT_P.map(n => `<option value="${n}" ${polyState.chords[0].root===n?'selected':''}>${n}</option>`).join('')}
+                        </select>
+                        <select onchange="polyState.chords[0].type = this.value" class="w-full font-bold text-slate-700 dark:text-slate-200 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                            <optgroup label="Tríadas"><option value="maj" ${polyState.chords[0].type==='maj'?'selected':''}>Mayor</option><option value="min" ${polyState.chords[0].type==='min'?'selected':''}>Menor</option><option value="aug" ${polyState.chords[0].type==='aug'?'selected':''}>Aumentado</option><option value="dim" ${polyState.chords[0].type==='dim'?'selected':''}>Disminuido</option></optgroup>
+                            <optgroup label="Tétradas"><option value="maj7" ${polyState.chords[0].type==='maj7'?'selected':''}>maj7</option><option value="m7" ${polyState.chords[0].type==='m7'?'selected':''}>m7</option><option value="m7b5" ${polyState.chords[0].type==='m7b5'?'selected':''}>m7(b5)</option><option value="dim7" ${polyState.chords[0].type==='dim7'?'selected':''}>dim7</option><option value="7" ${polyState.chords[0].type==='7'?'selected':''}>7 (Dom)</option></optgroup>
+                        </select>
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-3 shadow-sm md:col-span-1 lg:col-span-2">
+                    <span class="text-[10px] font-black uppercase text-purple-600 tracking-widest border-b border-slate-200 dark:border-slate-700 pb-1">Acorde Superior (Barrido Cromático)</span>
+                    <div class="flex gap-2 w-full md:w-1/2">
+                        <select onchange="polyState.chords[1].type = this.value" class="w-full font-bold text-slate-700 dark:text-slate-200 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                            <optgroup label="Tríadas"><option value="maj" ${polyState.chords[1].type==='maj'?'selected':''}>Mayor</option><option value="min" ${polyState.chords[1].type==='min'?'selected':''}>Menor</option><option value="aug" ${polyState.chords[1].type==='aug'?'selected':''}>Aumentado</option><option value="dim" ${polyState.chords[1].type==='dim'?'selected':''}>Disminuido</option></optgroup>
+                            <optgroup label="Tétradas"><option value="maj7" ${polyState.chords[1].type==='maj7'?'selected':''}>maj7</option><option value="m7" ${polyState.chords[1].type==='m7'?'selected':''}>m7</option><option value="m7b5" ${polyState.chords[1].type==='m7b5'?'selected':''}>m7(b5)</option><option value="dim7" ${polyState.chords[1].type==='dim7'?'selected':''}>dim7</option><option value="7" ${polyState.chords[1].type==='7'?'selected':''}>7 (Dom)</option></optgroup>
+                        </select>
+                    </div>
+                </div>`;
+            } else {
+                for (let i = 0; i < polyState.count; i++) {
+                    let title = i === 0 ? "Acorde Base (Grave)" : `Acorde Superpuesto ${i}`;
+                    let color = i === 0 ? "blue" : "purple";
+                    h += `<div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-3 shadow-sm">
+                        <span class="text-[10px] font-black uppercase text-${color}-600 tracking-widest border-b border-slate-200 dark:border-slate-700 pb-1">${title}</span>
+                        <div class="flex gap-2">
+                            <select onchange="polyState.chords[${i}].root = this.value" class="w-20 font-bold text-slate-800 dark:text-white rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                                ${NT_P.map(n => `<option value="${n}" ${polyState.chords[i].root===n?'selected':''}>${n}</option>`).join('')}
+                            </select>
+                            <select onchange="polyState.chords[${i}].type = this.value" class="w-full font-bold text-slate-700 dark:text-slate-200 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                                <optgroup label="Tríadas"><option value="maj" ${polyState.chords[i].type==='maj'?'selected':''}>Mayor</option><option value="min" ${polyState.chords[i].type==='min'?'selected':''}>Menor</option><option value="aug" ${polyState.chords[i].type==='aug'?'selected':''}>Aumentado</option><option value="dim" ${polyState.chords[i].type==='dim'?'selected':''}>Disminuido</option></optgroup>
+                                <optgroup label="Tétradas"><option value="maj7" ${polyState.chords[i].type==='maj7'?'selected':''}>maj7</option><option value="m7" ${polyState.chords[i].type==='m7'?'selected':''}>m7</option><option value="m7b5" ${polyState.chords[i].type==='m7b5'?'selected':''}>m7(b5)</option><option value="dim7" ${polyState.chords[i].type==='dim7'?'selected':''}>dim7</option><option value="7" ${polyState.chords[i].type==='7'?'selected':''}>7 (Dom)</option></optgroup>
+                            </select>
+                        </div>
+                    </div>`;
+                }
+            }
+            c.innerHTML = h;
+        }
+
+        function analyzePolyInstance(chordsArray) {
+            const L_MAP = {'C':0,'D':1,'E':2,'F':3,'G':4,'A':5,'B':6};
+            const C_MAP = {'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'F':5,'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11};
+            const CHORD_INTV = {
+                'maj': [{l:0,s:0},{l:2,s:4},{l:4,s:7}],
+                'min': [{l:0,s:0},{l:2,s:3},{l:4,s:7}],
+                'aug': [{l:0,s:0},{l:2,s:4},{l:4,s:8}],
+                'dim': [{l:0,s:0},{l:2,s:3},{l:4,s:6}],
+                'maj7': [{l:0,s:0},{l:2,s:4},{l:4,s:7},{l:6,s:11}],
+                'm7': [{l:0,s:0},{l:2,s:3},{l:4,s:7},{l:6,s:10}],
+                'm7b5': [{l:0,s:0},{l:2,s:3},{l:4,s:6},{l:6,s:10}],
+                'dim7': [{l:0,s:0},{l:2,s:3},{l:4,s:6},{l:6,s:9}],
+                '7': [{l:0,s:0},{l:2,s:4},{l:4,s:7},{l:6,s:10}]
+            };
+
+            let baseRootL = L_MAP[chordsArray[0].root.charAt(0)];
+            let baseRootC = C_MAP[chordsArray[0].root];
+            let baseObj = { letter: baseRootL, chroma: baseRootC };
+
+            let chordNames = [];
+            let blocks = [];
+            let uniqueIntervals = new Set();
+
+            for(let i = 0; i < chordsArray.length; i++) {
+                let chord = chordsArray[i];
+                let rL = L_MAP[chord.root.charAt(0)];
+                let rC = C_MAP[chord.root];
+
+                let block = [];
+                CHORD_INTV[chord.type].forEach(iv => {
+                    let nL = (rL + iv.l) % 7;
+                    let nC = (rC + iv.s) % 12;
+                    let intStr = calcInt({letter: nL, chroma: nC}, baseObj);
+                    block.push(intStr);
+                    uniqueIntervals.add(intStr);
+                });
+                blocks.push(block.join(' '));
+
+                let tLbl = chord.type; if(tLbl==='maj') tLbl=''; if(tLbl==='min') tLbl='m'; if(tLbl==='aug') tLbl='aug'; if(tLbl==='dim') tLbl='dim'; if(tLbl==='m7b5') tLbl='m7(b5)';
+                chordNames.push(chord.root + tLbl);
+            }
+
+            let relIntervals = Array.from(uniqueIntervals);
+            let sortOrder = ["1","b2","#1","2","b3","#2","3","4","b5","#4","5","b6","#5","6","bb7","b7","7"];
+            relIntervals.sort((a,b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
+
+            let matches = SCALES_DB.filter(scale => relIntervals.every(int => scale.intervals.includes(int)));
+
+            let partials = [];
+            if (matches.length === 0) {
+                partials = SCALES_DB.map(s => {
+                    let missing = relIntervals.filter(int => !s.intervals.includes(int));
+                    return { name: s.name, missing, matchCount: relIntervals.length - missing.length };
+                }).sort((a,b) => b.matchCount - a.matchCount).slice(0, 2);
+            }
+
+            return { chordNames, blocks, relIntervals, matches, partials };
+        }
+
+        function toggleCardEnh(btn) {
+            let container = btn.closest('.poly-card-wrapper');
+            let cfg = JSON.parse(decodeURIComponent(btn.dataset.cfg));
+            cfg.currentState = cfg.currentState === 'flat' ? 'sharp' : 'flat';
+            let newRoot = cfg.currentState === 'flat' ? cfg.flatRoot : cfg.sharpRoot;
+
+            let analysis = analyzePolyInstance([
+                { root: cfg.baseRoot, type: cfg.baseType },
+                { root: newRoot, type: cfg.topType }
+            ]);
+
+            container.outerHTML = buildPolyCard(analysis, false, cfg);
+            if(window.lucide) lucide.createIcons();
+        }
+
+        function buildPolyCard(data, isLarge = false, cfg = null) {
+            let matchesHtml = '';
+            if(data.matches.length > 0) {
+                matchesHtml = data.matches.map(m => `<div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-1.5 rounded-lg text-[10px] md:text-xs font-black shadow-sm dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400 truncate"><i data-lucide="check-circle" class="w-3 h-3 inline -mt-0.5"></i> ${m.name}</div>`).join('');
+            } else {
+                matchesHtml = data.partials.map(p => `<div class="bg-red-50 dark:bg-red-900/20 p-2 rounded-lg border border-red-100 dark:border-red-900/50 flex flex-col gap-1 shadow-sm"><span class="font-bold text-slate-700 dark:text-slate-300 text-[10px] truncate leading-tight">${p.name}</span><span class="text-[9px] bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded font-black truncate">Ajenos: ${p.missing.join(', ')}</span></div>`).join('');
+            }
+
+            let containerClass = isLarge ? "poly-card-wrapper bg-white dark:bg-slate-800 rounded-[2rem] p-8 border-2 border-slate-100 dark:border-slate-700 shadow-xl" : "poly-card-wrapper bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow relative group";
+            let tSize = isLarge ? "text-3xl md:text-4xl" : "text-xl md:text-2xl";
+
+            let fractionHtml = `<div class="flex flex-col items-center justify-center font-serif relative w-full px-4">`;
+            if (cfg && cfg.isToggleable) {
+                fractionHtml += `<button onclick="toggleCardEnh(this)" data-cfg="${encodeURIComponent(JSON.stringify(cfg))}" class="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100" title="Cambiar enarmónico"><i data-lucide="rotate-cw" class="w-4 h-4"></i></button>`;
+            }
+            if (data.chordNames.length === 3) {
+                fractionHtml += `<div class="border-b-2 border-slate-800 dark:border-white pb-1 w-full text-center"><span class="font-black ${tSize}">${data.chordNames[2]}</span></div>`;
+                fractionHtml += `<div class="border-b-2 border-slate-800 dark:border-white py-1 w-full text-center"><span class="font-black ${tSize}">${data.chordNames[1]}</span></div>`;
+                fractionHtml += `<div class="pt-1 w-full text-center"><span class="font-black ${tSize}">${data.chordNames[0]}</span></div>`;
+            } else {
+                fractionHtml += `<div class="border-b-2 border-slate-800 dark:border-white pb-1 w-full text-center"><span class="font-black ${tSize}">${data.chordNames[1]}</span></div>`;
+                fractionHtml += `<div class="pt-1 w-full text-center"><span class="font-black ${tSize}">${data.chordNames[0]}</span></div>`;
+            }
+            fractionHtml += `</div>`;
+
+            return `
+            <div class="${containerClass}">
+                <div class="${isLarge ? 'flex flex-col md:flex-row gap-8 items-center' : 'flex flex-col h-full'}">
+                    <div class="${isLarge ? 'md:w-4/12 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-700 pb-6 md:pb-0 md:pr-6 flex justify-center' : 'mb-5 border-b border-slate-100 dark:border-slate-700 pb-5 flex justify-center'}">
+                        ${fractionHtml}
+                    </div>
+                    <div class="${isLarge ? 'md:w-8/12 w-full' : 'flex-1 flex flex-col'}">
+                        <div class="mb-4">
+                            <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-2 text-center md:text-left">Estructura Resultante</span>
+                            <div class="flex flex-wrap items-center justify-center md:justify-start">
+                                ${data.blocks.map((b, idx) => `
+                                    <span class="bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-[10px] md:text-xs font-black text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 tracking-widest">${b}</span>
+                                    ${idx < data.blocks.length - 1 ? '<span class="text-slate-300 dark:text-slate-600 font-black mx-1.5 md:mx-2">|</span>' : ''}
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end">
+                            <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-2 text-center md:text-left">Análisis Modal</span>
+                            <div class="grid grid-cols-1 gap-1.5">
+                                ${matchesHtml}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function analyzePoly() {
+            if(SCALES_DB.length === 0) { Object.values(SCALES_DATA).forEach(g=>{g.forEach(s=>{SCALES_DB.push({name:s.name,intervals:s.formula});});}); }
+
+            let resContainer = id('poly-results');
+            resContainer.innerHTML = '';
+
+            const C_MAP = {'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'F':5,'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11};
+
+            if(polyState.count === 2) {
+                let resultsHtml = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">';
+                let baseChroma = C_MAP[polyState.chords[0].root];
+                
+                for(let i=0; i<12; i++) {
+                    let currentRootChroma = (baseChroma + i) % 12;
+                    let flatRoot = P_FLATS[currentRootChroma];
+                    let sharpRoot = P_SHARPS[currentRootChroma];
+                    let isBlackKey = flatRoot !== sharpRoot;
+
+                    let chordType = polyState.chords[1].type;
+                    
+                    let analysis = analyzePolyInstance([
+                        polyState.chords[0],
+                        { root: flatRoot, type: chordType }
+                    ]);
+
+                    let cfg = null;
+                    if(isBlackKey) {
+                        cfg = {
+                            isToggleable: true,
+                            flatRoot: flatRoot,
+                            sharpRoot: sharpRoot,
+                            currentState: 'flat',
+                            baseRoot: polyState.chords[0].root,
+                            baseType: polyState.chords[0].type,
+                            topType: chordType
+                        };
+                    }
+                    resultsHtml += buildPolyCard(analysis, false, cfg);
+                }
+                resultsHtml += '</div>';
+                resContainer.innerHTML = resultsHtml;
+            } else {
+                let analysis = analyzePolyInstance(polyState.chords.slice(0, 3));
+                resContainer.innerHTML = buildPolyCard(analysis, true);
+            }
+            if(window.lucide) lucide.createIcons();
+        }
+
+        // ==========================================
+        // FIN LÓGICA DE POLIACORDES
+        // ==========================================
 
         function getAnalysisData() {
             const r=A_NN.find(n=>n.name===aSt.rootName),st=getAnStruct(r,aSt.type),res=[];
@@ -1169,4 +1461,4 @@
         };
     </script>
 </body>
-</html>
+    </html>
